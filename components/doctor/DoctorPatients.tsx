@@ -31,6 +31,12 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
   const [creatingPortal, setCreatingPortal] = useState(false);
   const [portalSuccess, setPortalSuccess]   = useState<string | null>(null);
 
+  // Drive link per patient
+  const [editingDriveId, setEditingDriveId]   = useState<string | null>(null);
+  const [driveLinkValues, setDriveLinkValues] = useState<Record<string, string>>({});
+  const [driveLinkSaving, setDriveLinkSaving] = useState<Record<string, boolean>>({});
+  const [driveLinkError, setDriveLinkError]   = useState<Record<string, string>>({});
+
   const f = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(prev => ({ ...prev, [key]: e.target.value }));
 
@@ -72,6 +78,7 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
         process: form.process.trim() || null,
         user_id: null as null,
         checkin_options: null as null,
+        drive_link: null as null,
       };
       const { error: e } = await createPatient(createPayload);
       if (e) { setError(e.message); setSaving(false); return; }
@@ -81,6 +88,28 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
   }
 
   async function handleDelete(id: string) { await deletePatient(id); setConfirmDelete(null); onPatientsChange(); }
+
+  async function handleSaveDriveLink(patientId: string) {
+    const raw = (driveLinkValues[patientId] ?? "").trim();
+    // Validar que sea una URL o vacío (para borrar el enlace)
+    if (raw && !/^https?:\/\/.+/.test(raw)) {
+      setDriveLinkError(prev => ({ ...prev, [patientId]: "Ingresa una URL válida (https://...)." }));
+      return;
+    }
+    setDriveLinkSaving(prev => ({ ...prev, [patientId]: true }));
+    setDriveLinkError(prev => ({ ...prev, [patientId]: "" }));
+    const { error: e } = await updatePatient(patientId, { drive_link: raw || null });
+    setDriveLinkSaving(prev => ({ ...prev, [patientId]: false }));
+    if (e) {
+      const msg = e.message.includes("drive_link")
+        ? "La columna 'drive_link' no existe aún. Ejecuta en Supabase SQL Editor: ALTER TABLE patients ADD COLUMN drive_link text;"
+        : e.message;
+      setDriveLinkError(prev => ({ ...prev, [patientId]: msg }));
+      return;
+    }
+    setEditingDriveId(null);
+    onPatientsChange();
+  }
 
   async function handleCreatePortalAccess(patient: Patient) {
     if (!patient.email) { setError("El paciente necesita correo para acceder al portal."); return; }
@@ -148,6 +177,82 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
             {portalSuccess === p.id && (
               <div className="mt-2 rounded-xl bg-green-50 px-3 py-2 text-xs text-green-700">✓ Acceso creado exitosamente.</div>
             )}
+
+            {/* ── Google Drive ──────────────────────────────── */}
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              {editingDriveId === p.id ? (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Enlace de Google Drive</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="https://drive.google.com/..."
+                      value={driveLinkValues[p.id] ?? p.drive_link ?? ""}
+                      onChange={e => setDriveLinkValues(prev => ({ ...prev, [p.id]: e.target.value }))}
+                      className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800 outline-none transition focus:border-[#6F98BE] focus:bg-white"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleSaveDriveLink(p.id)}
+                      disabled={driveLinkSaving[p.id]}
+                      className="shrink-0 rounded-xl bg-[#1E5A85] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#6F98BE] disabled:opacity-60"
+                    >
+                      {driveLinkSaving[p.id] ? "..." : "Guardar"}
+                    </button>
+                    <button
+                      onClick={() => { setEditingDriveId(null); setDriveLinkError(prev => ({ ...prev, [p.id]: "" })); }}
+                      className="shrink-0 rounded-xl border border-slate-200 px-2.5 py-2 text-xs text-slate-500 transition hover:bg-slate-50"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {driveLinkError[p.id] && (
+                    <p className="text-[11px] text-red-500">{driveLinkError[p.id]}</p>
+                  )}
+                </div>
+              ) : p.drive_link ? (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={p.drive_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center gap-2 rounded-xl bg-[#EEF4F8] px-3 py-2 text-xs font-medium text-[#1E5A85] transition hover:bg-[#6F98BE]/15"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 87.3 78" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+                      <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0a7.27 7.27 0 0 0 1 3.65l5.6 10.2z" fill="#0066DA"/>
+                      <path d="M43.65 25L29.9 1.2a7.17 7.17 0 0 0-3.3 3.3L1 47.5a7.27 7.27 0 0 0-1 3.65h27.5L43.65 25z" fill="#00AC47"/>
+                      <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25a7.27 7.27 0 0 0 1-3.65H59.6l5.85 11.5 8.1 11.45z" fill="#EA4335"/>
+                      <path d="M43.65 25L57.4 1.2A7.52 7.52 0 0 0 53.75 0H33.55a7.52 7.52 0 0 0-3.65 1.2L43.65 25z" fill="#00832D"/>
+                      <path d="M59.6 51.15h-31.9L13.95 76.8c1.35.8 2.9 1.2 4.5 1.2h50.4c1.6 0 3.15-.45 4.5-1.2L59.6 51.15z" fill="#2684FC"/>
+                      <path d="M73.4 25.5L57.4 1.2a7.17 7.17 0 0 0-3.3-3.3... " fill="#FFBA00"/>
+                      <path d="M73.4 25.5l-13.8 25.65H87.3a7.27 7.27 0 0 0-1-3.65L73.4 25.5z" fill="#FFBA00"/>
+                    </svg>
+                    Abrir Google Drive
+                  </a>
+                  <button
+                    onClick={() => { setEditingDriveId(p.id); setDriveLinkValues(prev => ({ ...prev, [p.id]: p.drive_link ?? "" })); }}
+                    title="Editar enlace"
+                    className="shrink-0 rounded-xl border border-slate-200 px-2.5 py-2 text-xs text-slate-400 transition hover:border-[#6F98BE] hover:text-[#1E5A85]"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingDriveId(p.id); setDriveLinkValues(prev => ({ ...prev, [p.id]: "" })); }}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 transition hover:text-[#1E5A85]"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  Agregar enlace de Drive
+                </button>
+              )}
+            </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <button onClick={() => openEdit(p)} className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 transition hover:border-[#6F98BE] hover:text-[#1E5A85]">Editar</button>

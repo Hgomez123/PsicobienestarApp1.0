@@ -26,6 +26,7 @@ export interface Patient {
   status: PatientStatus;
   process: string | null;   // enfoque terapéutico actual
   checkin_options: string[] | null;
+  drive_link: string | null; // enlace de Google Drive para esta paciente
   created_at: string;
 }
 
