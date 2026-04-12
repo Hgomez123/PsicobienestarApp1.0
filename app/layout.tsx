@@ -13,9 +13,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Psicobienestar · Psicología Clínica Profesional",
+  title: "Psicobienestar | Psicólogos en línea para Latinoamérica",
   description:
-    "Acompañamiento psicológico profesional, humano y confidencial. Terapia individual, de pareja y bienestar adolescente. Atención presencial y virtual en Ciudad de Guatemala.",
+    "Consultas psicológicas online con profesionales certificados. Atención para Guatemala, México, Colombia, Argentina y toda Latinoamérica. Agenda tu cita hoy.",
+  keywords:
+    "psicólogo online, psicología Guatemala, terapia psicológica latinoamérica, consulta psicológica, salud mental",
+  openGraph: {
+    title: "Psicobienestar | Psicólogos en línea para Latinoamérica",
+    description:
+      "Consultas psicológicas online con profesionales certificados. Atención para Guatemala, México, Colombia, Argentina y toda Latinoamérica. Agenda tu cita hoy.",
+    url: "https://psicobienestar.vercel.app",
+    siteName: "Psicobienestar",
+    locale: "es_GT",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
