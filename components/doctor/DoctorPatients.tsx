@@ -45,23 +45,38 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
   async function handleSave() {
     if (!form.name.trim()) { setError("El nombre es obligatorio."); return; }
     setSaving(true); setError("");
-    const basePayload = {
-      doctor_id: doctorId,
-      name: form.name.trim(),
-      age: form.age ? parseInt(form.age) : null,
-      email: form.email.trim() || null,
-      phone: form.phone.trim() || null,
-      modality: form.modality,
-      status: form.status,
-      process: form.process.trim() || null,
-      user_id: null as null,
-      checkin_options: null as null,
-    };
 
-    const { error: e } = editingId
-      ? await updatePatient(editingId, basePayload)
-      : await createPatient(basePayload);
-    if (e) { setError(e.message); setSaving(false); return; }
+    if (editingId) {
+      // Actualizar: NO incluir user_id ni checkin_options para no borrar vínculos ya creados
+      const updatePayload = {
+        name: form.name.trim(),
+        age: form.age ? parseInt(form.age) : null,
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+        modality: form.modality,
+        status: form.status,
+        process: form.process.trim() || null,
+      };
+      const { error: e } = await updatePatient(editingId, updatePayload);
+      if (e) { setError(e.message); setSaving(false); return; }
+    } else {
+      // Crear: user_id y checkin_options comienzan en null
+      const createPayload = {
+        doctor_id: doctorId,
+        name: form.name.trim(),
+        age: form.age ? parseInt(form.age) : null,
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+        modality: form.modality,
+        status: form.status,
+        process: form.process.trim() || null,
+        user_id: null as null,
+        checkin_options: null as null,
+      };
+      const { error: e } = await createPatient(createPayload);
+      if (e) { setError(e.message); setSaving(false); return; }
+    }
+
     setSaving(false); setShowForm(false); onPatientsChange();
   }
 
@@ -79,8 +94,12 @@ export default function DoctorPatients({ doctorId, patients, selectedPatient, on
     });
     const json = await res.json();
     if (!res.ok) { setError(json.error ?? "Error al crear acceso."); setCreatingPortal(false); return; }
-    setCreatingPortal(false); setPortalSuccess(patient.id);
-    setForm(prev => ({ ...prev, password: "" })); onPatientsChange();
+    setCreatingPortal(false);
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY);
+    setPortalSuccess(patient.id);
+    onPatientsChange();
     setTimeout(() => setPortalSuccess(null), 5000);
   }
 

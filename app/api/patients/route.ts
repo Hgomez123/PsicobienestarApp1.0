@@ -99,15 +99,29 @@ export async function POST(req: NextRequest) {
 
   await admin.from("profiles").upsert({ id: newUserId, name, email, role: "patient" });
 
-  const { error: linkError } = await admin.rpc("link_patient_user", {
-    p_patient_id: patientId,
-    p_user_id:    newUserId,
-  });
+  /* ── Vincular patient.user_id directamente (service_role bypasa RLS) ── */
+  const { data: updatedPatient, error: updateError } = await admin
+    .from("patients")
+    .update({ user_id: newUserId })
+    .eq("id", patientId)
+    .select("id")
+    .single();
 
-  if (linkError) {
+  if (updateError || !updatedPatient) {
+    // Revertir: eliminar el usuario recién creado
     await admin.auth.admin.deleteUser(newUserId);
-    return NextResponse.json({ error: `Error al vincular: ${linkError.message}` }, { status: 500 });
+    const detail = updateError?.message ?? "No se encontró el paciente con ese ID.";
+    return NextResponse.json({ error: `Error al vincular el acceso: ${detail}` }, { status: 500 });
   }
+
+  // Intentar también el RPC como mecanismo secundario (si existe y hace algo extra).
+  // Su fallo no es crítico — el UPDATE directo ya vinculó correctamente.
+  try {
+    await admin.rpc("link_patient_user", {
+      p_patient_id: patientId,
+      p_user_id:    newUserId,
+    });
+  } catch { /* ignorar si el RPC no existe o falla */ }
 
   return NextResponse.json({ success: true, userId: newUserId });
 }

@@ -48,6 +48,7 @@ export default function PortalPacientePage() {
   const userIdRef = useRef<string | null>(null);
 
   const [authorized, setAuthorized]           = useState(false);
+  const [profileNotFound, setProfileNotFound] = useState(false);
   const [patient, setPatient]                 = useState<Patient | null>(null);
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [resources, setResources]             = useState<ResourceItem[]>([]);
@@ -94,6 +95,12 @@ export default function PortalPacientePage() {
         const profileJson = await profileRes.json() as { data: import("@/lib/supabase/types").Patient };
         if (!profileJson.data) { router.replace("/login"); return; }
         setPatient(profileJson.data);
+      } else if (profileRes.status === 404) {
+        // Usuario autenticado pero sin perfil de paciente vinculado aún.
+        // NO redirigir a /login — causaría un bucle infinito porque el login
+        // volvería a redirigir aquí al detectar la sesión activa.
+        setProfileNotFound(true);
+        return;
       } else {
         // 429, 5xx, etc. — fall back to the regular supabase client so the portal
         // still loads; checkin_options may be empty until the rate window resets.
@@ -401,6 +408,32 @@ export default function PortalPacientePage() {
     };
     return map[activeSection] ?? "";
   }, [activeSection]);
+
+  /* ── Perfil no vinculado ────────────────────────────────── */
+  if (profileNotFound) {
+    return (
+      <main className="flex min-h-screen items-center justify-center px-4 text-slate-700"
+        style={{ background: "#F2EDE8" }}>
+        <div className="flex max-w-sm flex-col items-center gap-4 rounded-2xl bg-white p-8 shadow-sm text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "linear-gradient(135deg, #3B7EC8, #7C72B8)" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2 className="text-[1.1rem] font-bold text-slate-800">Tu perfil está siendo configurado</h2>
+          <p className="text-[13px] leading-6 text-slate-500">
+            Tu cuenta fue creada correctamente pero aún no está completamente vinculada. Por favor contacta a tu psicóloga para que active tu acceso.
+          </p>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); router.push("/login"); }}
+            className="mt-2 rounded-xl bg-slate-100 px-5 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   /* ── Loading ────────────────────────────────────────────── */
   if (!authorized) {

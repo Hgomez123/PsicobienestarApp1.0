@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  getClinicalNotes, createClinicalNote, updateClinicalNote, deleteClinicalNote,
+  getClinicalNotes, updateClinicalNote, deleteClinicalNote,
   getGoals, createGoal, updateGoal, deleteGoal,
   getDoctorCheckins,
 } from "@/lib/supabase/db";
@@ -57,6 +57,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
   const [goalText, setGoalText]   = useState("");
   const [editingNote, setEditingNote] = useState<{ id: string; content: string } | null>(null);
   const [saving, setSaving]       = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
   const [tab, setTab]             = useState<Tab>("notas");
 
   // Check-in options state (per patient)
@@ -100,8 +101,35 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
   async function handleAddNote() {
     if (!noteText.trim() || !selectedPatient) return;
     setSaving(true);
-    await createClinicalNote({ patient_id: selectedPatient.id, doctor_id: doctorId, content: noteText.trim() });
-    setNoteText(""); setSaving(false); load();
+    setNoteError(null);
+    try {
+      const { data: { session } } = await supabaseDoctor.auth.getSession();
+      if (!session?.access_token) {
+        setNoteError("No hay sesión activa. Recarga la página.");
+        setSaving(false);
+        return;
+      }
+      const res = await fetch("/api/clinical-notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ patientId: selectedPatient.id, content: noteText.trim() }),
+      });
+      if (!res.ok) {
+        const json = await res.json() as { error?: string };
+        setNoteError(json.error ?? "Error al guardar la nota.");
+        setSaving(false);
+        return;
+      }
+      setNoteText("");
+    } catch {
+      setNoteError("Error de red. Intenta de nuevo.");
+    } finally {
+      setSaving(false);
+      load();
+    }
   }
 
   async function handleUpdateNote() {
@@ -254,6 +282,9 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                   className="mt-3 rounded-full bg-[#1E5A85] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#6F98BE] disabled:opacity-50">
                   {saving ? "Guardando..." : "Guardar nota"}
                 </button>
+                {noteError && (
+                  <p className="mt-2 text-xs text-red-500">{noteError}</p>
+                )}
               </div>
 
               {notes.map(note => (
