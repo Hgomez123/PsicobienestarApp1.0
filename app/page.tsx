@@ -13,9 +13,9 @@ const navLinks = [
 ];
 
 const stats = [
-  { value: "+50",         label: "Pacientes acompañados" },
+  { value: "Formación",         label: "Y experiencia especializada " },
   { value: "100%",        label: "Confidencialidad garantizada" },
-  { value: "Virtual",     label: "y presencial disponible" },
+  { value: "Presencial",     label: "y disponibilidad Virtual" },
   { value: "Colegiada",   label: "Col. Psicólogos de Guatemala" },
 ];
 
@@ -97,7 +97,7 @@ const services = [
     title: "Un espacio de escucha genuina para ti",
     description:
       "Acompañamiento personalizado para ansiedad, estrés, duelo, autoestima y crecimiento personal. Un entorno seguro donde tú eres el centro y la confidencialidad es absoluta.",
-    detail: "Duración: 50 min · Frecuencia: semanal o quincenal",
+    detail: "Duración: 60 min · Frecuencia: semanal o quincenal",
   },
   {
     tag: "Sesiones Virtuales",
@@ -110,8 +110,8 @@ const services = [
     tag: "Atención Presencial",
     title: "Un entorno cálido y profesional en Guatemala",
     description:
-      "Sesiones en persona en Centro Humana, uno de los centros de salud mental más reconocidos de Guatemala. Diseñado para que te sientas cómodo/a y seguro/a.",
-    detail: "Centro Humana · Ciudad de Guatemala",
+      "Sesiones en persona en Psicobienestar-Renovati, zona 10 de Ciudad de Guatemala. Un espacio diseñado para que te sientas cómodo/a y seguro/a desde el primer momento.",
+    detail: "Psicobienestar-Renovati · Ciudad de Guatemala",
   },
 ];
 
@@ -119,14 +119,39 @@ const credentials = [
   { label: "Formación",       value: "Lic. en Psicología Clínica" },
   { label: "Especialización", value: "Neuropsicología (en curso)" },
   { label: "Colegiada",       value: "Col. Psicólogos de Guatemala" },
-  { label: "Centro clínico",  value: "Humana" },
+  { label: "Centro clínico",  value: "Psicobienestar-Renovati" },
 ];
 
 /* ─── Componente ───────────────────────────────────────────── */
 
+const WA_NUMBER = "50243123394";
+
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: "",
+    correo: "",
+    modalidad: "Terapia individual – Presencial",
+    mensaje: "",
+  });
+
+  function handleFormChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = [
+      `Hola, me gustaría agendar una sesión.`,
+      ``,
+      `*Nombre:* ${formData.nombre}`,
+      `*Correo:* ${formData.correo}`,
+      `*Modalidad:* ${formData.modalidad}`,
+      `*Mensaje:* ${formData.mensaje}`,
+    ].join("\n");
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -514,7 +539,7 @@ export default function Home() {
                 style={{ animationDelay: "2.4s" }}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Modalidades</p>
-                <p className="mt-1 text-sm font-bold text-[#1E5A85]">Presencial · Virtual</p>
+                <p className="mt-1 text-sm font-bold text-[#1E5A85]">Virtual · Presencial</p>
               </div>
             </div>
           </div>
@@ -590,7 +615,7 @@ export default function Home() {
                 Lic. María Eugenia<br className="hidden sm:block" /> Castillo García
               </h2>
               <p className="mt-2 text-base font-medium text-[#6F98BE]">
-                Psicóloga Clínica · Centro Humana, Guatemala
+                Psicóloga Clínica · Psicobienestar-Renovati, Guatemala
               </p>
               <p className="mt-6 text-base leading-8 text-slate-500 '[text-wrap:balance]">
                 Soy psicóloga clínica colegiada, con formación en psicología clínica y
@@ -600,7 +625,7 @@ export default function Home() {
               </p>
               <p className="mt-4 text-base leading-8 text-slate-500 '[text-wrap:balance]">
                 Trabajo en{" "}
-                <span className="font-semibold text-slate-800">Centro Humana</span>
+                <span className="font-semibold text-slate-800">Psicobienestar-Renovati</span>
                 , atendiendo de forma presencial y virtual con la misma dedicación y
                 confidencialidad.
               </p>
@@ -843,7 +868,7 @@ export default function Home() {
                     </li>
                     <li className="flex gap-3 text-sm leading-5 text-slate-400">
                       <span className="mt-0.5 shrink-0">◇</span>
-                      <span>N.º Matrícula Profesional: <strong className="text-slate-600">17538</strong></span>
+                      <span>N.º Colegiado: <strong className="text-slate-600">17538</strong></span>
                     </li>
                   </ul>
                 </div>
@@ -921,8 +946,8 @@ export default function Home() {
 
               {/* Pacientes */}
               <div className="quote-stat-card">
-                <p className="quote-stat-value">+50</p>
-                <p className="quote-stat-label">Pacientes acompañados</p>
+                <p className="quote-stat-value">Atención</p>
+                <p className="quote-stat-label">Personalizada</p>
               </div>
 
               {/* Confidencialidad */}
@@ -978,17 +1003,17 @@ export default function Home() {
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
                     label: "Correo electrónico",
-                    value: "contacto@psicobienestar.gt",
+                    value: "gt.psicobienestar@gmail.com",
                   },
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
                     label: "WhatsApp",
-                    value: "58504505",
+                    value: "4312-3394",
                   },
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
                     label: "Ubicación",
-                    value: "zona 10, edificio renovati, Ciudad de Guatemala",
+                    value: "Edificio Renovati, zona 10, Ciudad de Guatemala",
                   },
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
@@ -1011,12 +1036,14 @@ export default function Home() {
               {/* CTA WhatsApp */}
               <div className="mt-10 overflow-hidden 'rounded-[24px] bg-[#1E5A85] p-6 shadow-[0_16px_40px_rgba(30,90,133,0.22)]">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">¿Lista/o para comenzar?</p>
-                <p className="mt-2 text-lg font-semibold text-white">Primera sesión sin compromiso.</p>
+                <p className="mt-2 text-lg font-semibold text-white">Primera sesión con 75% de descuento</p>
                 <p className="mt-1.5 text-sm leading-6 text-white/60 '[text-wrap:balance]">
                   Cuéntame sobre lo que estás viviendo.
                 </p>
                 <a
-                  href="#"
+                  href="https://wa.me/50243123394"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#1E5A85] transition-all duration-200 hover:scale-[1.04]"
                 >
                   💬 Escribir por WhatsApp
@@ -1038,24 +1065,41 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900">Solicitar una cita</h3>
                 <p className="mt-1 text-sm text-slate-400">Respondo en menos de 24 horas.</p>
 
-                <form className="mt-8 space-y-4" onSubmit={(e) => e.preventDefault()}>
-                  {[
-                    { label: "Nombre completo",    type: "text",  placeholder: "Tu nombre" },
-                    { label: "Correo electrónico", type: "email", placeholder: "tu@correo.com" },
-                  ].map(({ label, type, placeholder }) => (
-                    <div key={label}>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-600">{label}</label>
-                      <input
-                        type={type}
-                        placeholder={placeholder}
-                        className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15"
-                      />
-                    </div>
-                  ))}
+                <form className="mt-8 space-y-4" onSubmit={handleFormSubmit}>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-600">Nombre completo</label>
+                    <input
+                      type="text"
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleFormChange}
+                      placeholder="Tu nombre"
+                      required
+                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-600">Correo electrónico</label>
+                    <input
+                      type="email"
+                      name="correo"
+                      value={formData.correo}
+                      onChange={handleFormChange}
+                      placeholder="tu@correo.com"
+                      required
+                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15"
+                    />
+                  </div>
 
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-slate-600">Modalidad de preferencia</label>
-                    <select className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15">
+                    <select
+                      name="modalidad"
+                      value={formData.modalidad}
+                      onChange={handleFormChange}
+                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15"
+                    >
                       <option>Terapia individual – Presencial</option>
                       <option>Terapia individual – Virtual</option>
                       <option>Acompañamiento psicológico</option>
@@ -1067,6 +1111,9 @@ export default function Home() {
                     <label className="mb-1.5 block text-sm font-medium text-slate-600">Mensaje</label>
                     <textarea
                       rows={4}
+                      name="mensaje"
+                      value={formData.mensaje}
+                      onChange={handleFormChange}
                       placeholder="Cuéntame brevemente sobre lo que buscas o lo que estás viviendo..."
                       className="w-full resize-none rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-[#1E5A85] focus:bg-white focus:ring-2 focus:ring-[#1E5A85]/15"
                     />
@@ -1077,7 +1124,7 @@ export default function Home() {
                     className="btn-shimmer w-full rounded-[14px] py-4 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(30,90,133,0.25)] transition-all duration-200 hover:scale-[1.01]"
                     style={{ background: "linear-gradient(135deg, #1E5A85 0%, #2d7aaa 100%)" }}
                   >
-                    Enviar solicitud →
+                    💬 Enviar por WhatsApp →
                   </button>
 
                   <p className="text-center text-xs text-slate-400">
@@ -1143,7 +1190,7 @@ export default function Home() {
                 </a>
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/50200000000"
+                  href="https://wa.me/50243123394"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp"
@@ -1190,7 +1237,7 @@ export default function Home() {
                   },
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-                    label: "Ubicación",  value: "Centro Humana, Guatemala",
+                    label: "Ubicación",  value: "Psicobienestar-Renovati, Guatemala",
                   },
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
