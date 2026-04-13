@@ -54,6 +54,7 @@ function useCountdown(targetDate: Date | null) {
 export default function DoctorDashboard({ doctorId, patients, selectedPatient, appointmentRequests, onSelectPatient, onGoToSection }: Props) {
   const [appointments, setAppointments] = useState<AppointmentWithPatient[]>([]);
   const [checkins, setCheckins]         = useState<CheckinRow[]>([]);
+  const [loading, setLoading]           = useState(true);
 
   const loadAppointments = useCallback(async () => {
     if (!doctorId) return;
@@ -67,7 +68,16 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
     if (data) setCheckins(data as CheckinRow[]);
   }, [doctorId]);
 
-  useEffect(() => { loadAppointments(); loadCheckins(); }, [loadAppointments, loadCheckins]);
+  useEffect(() => {
+    Promise.all([loadAppointments(), loadCheckins()]).finally(() => setLoading(false));
+  }, [loadAppointments, loadCheckins]);
+
+  // Refresca check-ins cada hora para mantener alertas actualizadas
+  useEffect(() => {
+    if (!doctorId) return;
+    const id = setInterval(() => loadCheckins(), 60 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [doctorId, loadCheckins]);
 
   // Real-time: citas y check-ins
   useEffect(() => {
@@ -119,14 +129,28 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
     }
   }
 
-  // Patients with no check-in in the last 7 days
+  // Pacientes activos sin check-in en +7 días.
+  // Solo alertar si el paciente lleva más de 7 días registrado (evita falsos positivos en pacientes nuevos).
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
   const patientsWithoutRecentCheckin = patients.filter(p => {
     if (p.status !== "Activa") return false;
+    // Excluir pacientes creados hace menos de 7 días (no han tenido tiempo de usar el portal)
+    if (new Date(p.created_at) > sevenDaysAgo) return false;
     const last = latestCheckinByPatient[p.id];
     if (!last) return true;
     return new Date(last.created_at) < sevenDaysAgo;
   });
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 text-slate-500">
+        <svg className="animate-spin text-[#1E5A85]" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <p className="text-sm text-slate-400">Cargando panel...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

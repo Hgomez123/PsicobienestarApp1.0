@@ -111,28 +111,54 @@ export const supportCards: Record<
 const DAY = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MON = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-/** Genera los próximos 4 días hábiles (lun–vie) a partir de mañana. */
-export function getAvailableDates() {
-  const result: { isoDate: string; day: string; label: string; month: string; slots: string[] }[] = [];
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 1);
+/** Slots disponibles de 8:00 a 16:00 (horario 8 a 5). */
+const ALL_SLOTS = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
 
-  while (result.length < 4) {
-    const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) {
-      const yyyy = d.getFullYear();
-      const mm   = String(d.getMonth() + 1).padStart(2, "0");
-      const dd   = String(d.getDate()).padStart(2, "0");
+/**
+ * Genera semana actual (lun–sáb) + semana siguiente (lun–sáb), excluyendo hoy y días pasados.
+ * bookedISO: array de strings "YYYY-MM-DDTHH:MM:00" con horarios ya reservados.
+ */
+export function getAvailableDates(bookedISO: string[] = []) {
+  const result: { isoDate: string; day: string; label: string; month: string; slots: string[] }[] = [];
+  const bookedSet = new Set(bookedISO);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  // Lunes de la semana actual
+  const dow = today.getDay();
+  const daysToMonday = dow === 0 ? -6 : 1 - dow;
+  const weekMonday = new Date(today);
+  weekMonday.setDate(today.getDate() + daysToMonday);
+
+  // 2 semanas: lun (0) a sáb (5)
+  for (let week = 0; week < 2; week++) {
+    for (let dayOff = 0; dayOff < 6; dayOff++) {
+      const date = new Date(weekMonday);
+      date.setDate(weekMonday.getDate() + week * 7 + dayOff);
+      date.setHours(0, 0, 0, 0);
+
+      if (date < tomorrow) continue; // omitir hoy y días pasados
+
+      const yyyy = date.getFullYear();
+      const mm   = String(date.getMonth() + 1).padStart(2, "0");
+      const dd   = String(date.getDate()).padStart(2, "0");
+      const isoDate = `${yyyy}-${mm}-${dd}`;
+
+      const slots = ALL_SLOTS.filter(slot => !bookedSet.has(`${isoDate}T${slot}:00`));
+      if (slots.length === 0) continue; // día sin horarios disponibles
+
       result.push({
-        isoDate: `${yyyy}-${mm}-${dd}`,
-        day:     String(d.getDate()),
-        label:   `${DAY[dow]} ${d.getDate()}`,
-        month:   MON[d.getMonth()],
-        slots:   ["09:00", "10:30", "12:00", "15:00", "16:30"],
+        isoDate,
+        day:   String(date.getDate()),
+        label: `${DAY[date.getDay()]} ${date.getDate()}`,
+        month: MON[date.getMonth()],
+        slots,
       });
     }
-    d.setDate(d.getDate() + 1);
   }
   return result;
 }

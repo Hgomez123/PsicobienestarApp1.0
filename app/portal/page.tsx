@@ -35,7 +35,7 @@ import InactivityGuard from "@/components/ui/InactivityGuard";
 import { patientSteps, PATIENT_STORAGE_KEY } from "@/data/onboardingSteps";
 
 import type { NavItem, SupportCard, UserData } from "@/types/portal";
-import { navItems, supportCards, checkinOptions as defaultCheckinOptions, availableDates } from "@/data/portalData";
+import { navItems, supportCards, checkinOptions as defaultCheckinOptions, getAvailableDates } from "@/data/portalData";
 
 type RecommendationItem = { title: string; text: string };
 type ResourceItem       = { type: string; title: string; desc: string; filePath: string | null; fileUrl: string | null };
@@ -65,8 +65,9 @@ export default function PortalPacientePage() {
   const [logoutModalOpen, setLogoutModalOpen]   = useState(false);
   const [sessionDetailsOpen, setSessionDetailsOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen]     = useState(false);
-  const [selectedDate, setSelectedDate]         = useState(availableDates[0]?.label ?? "");
-  const [selectedIsoDate, setSelectedIsoDate]   = useState(availableDates[0]?.isoDate ?? "");
+  const [bookedSlots, setBookedSlots]           = useState<string[]>([]);
+  const [selectedDate, setSelectedDate]         = useState("");
+  const [selectedIsoDate, setSelectedIsoDate]   = useState("");
   const [selectedSlot, setSelectedSlot]         = useState("");
   const [bookingSuccess, setBookingSuccess]     = useState(false);
   const [activeSupportCard, setActiveSupportCard] = useState<SupportCard>("mensaje");
@@ -109,6 +110,7 @@ export default function PortalPacientePage() {
         setPatient(patientData);
       }
       setAuthorized(true);
+      fetchBookedSlots();
 
       // Show onboarding once on first visit
       if (!localStorage.getItem(PATIENT_STORAGE_KEY)) {
@@ -150,6 +152,22 @@ export default function PortalPacientePage() {
       const json = await res.json() as { data: import("@/lib/supabase/types").Patient };
       if (json.data) setPatient(json.data);
     } catch { /* error de red: mantener estado actual */ }
+  }, []);
+
+  // Carga horarios ya reservados de la doctora para filtrar el calendario
+  const fetchBookedSlots = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch("/api/available-slots", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = await res.json() as { booked: string[] };
+        setBookedSlots(json.booked ?? []);
+      }
+    } catch { /* silencioso */ }
   }, []);
 
   const load = useCallback(async () => {
@@ -280,6 +298,24 @@ export default function PortalPacientePage() {
       .subscribe();
     return () => { supabase.removeChannel(bc); };
   }, [patient, loadPatient, loadClinicalNotes]);
+
+  /* ── Calendario dinámico ───────────────────────────────── */
+  const computedDates = useMemo(() => getAvailableDates(bookedSlots), [bookedSlots]);
+
+  // Al abrir el modal de reprogramación: refrescar slots y seleccionar el primer día disponible
+  useEffect(() => {
+    if (!rescheduleOpen) return;
+    fetchBookedSlots();
+  }, [rescheduleOpen, fetchBookedSlots]);
+
+  useEffect(() => {
+    if (rescheduleOpen && computedDates.length > 0) {
+      setSelectedDate(computedDates[0].label);
+      setSelectedIsoDate(computedDates[0].isoDate);
+      setSelectedSlot("");
+      setBookingSuccess(false);
+    }
+  }, [rescheduleOpen, computedDates]);
 
   /* ── Navigation ────────────────────────────────────────── */
   function navigateTo(section: NavItem) {
@@ -511,7 +547,9 @@ export default function PortalPacientePage() {
           <div>
             <p className="text-sm text-slate-500">Calendario disponible</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              {availableDates.map(date => {
+              {computedDates.length === 0 ? (
+                <p className="col-span-2 text-sm text-slate-400">No hay fechas disponibles en este momento.</p>
+              ) : computedDates.map(date => {
                 const active = selectedDate === date.label;
                 return (
                   <button key={date.label}
@@ -529,7 +567,7 @@ export default function PortalPacientePage() {
           <div>
             <p className="text-sm text-slate-500">Horarios disponibles</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {availableDates.find(d => d.label === selectedDate)?.slots.map(slot => {
+              {computedDates.find(d => d.label === selectedDate)?.slots.map(slot => {
                 const active = selectedSlot === slot;
                 const [hh, mm] = slot.split(":").map(Number);
                 const label12 = `${hh === 0 ? 12 : hh > 12 ? hh - 12 : hh}:${mm.toString().padStart(2,"0")} ${hh >= 12 ? "PM" : "AM"}`;
