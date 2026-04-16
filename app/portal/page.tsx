@@ -78,45 +78,74 @@ export default function PortalPacientePage() {
   const [checkinError, setCheckinError]         = useState<string | null>(null);
 
   /* ── Auth guard ─────────────────────────────────────────── */
+  //
+  // Usamos onAuthStateChange + INITIAL_SESSION en lugar de getSession() para evitar
+  // el bucle infinito portal ↔ login que ocurre al hacer F5.
+  //
+  // getSession() puede retornar null mientras el SDK aún está restaurando la sesión
+  // de localStorage (race condition de inicialización). onAuthStateChange con
+  // INITIAL_SESSION se dispara DESPUÉS de que el SDK terminó de inicializar,
+  // por lo que un session=null aquí es definitivo y seguro para redirigir.
   useEffect(() => {
-    getSession().then(async ({ data }) => {
-      if (!data.session) { router.replace("/login"); return; }
+    let initialized = false;
 
-      userIdRef.current = data.session.user.id;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Redirigir si la sesión fue cerrada en otro tab o el token fue revocado.
+        if (event === "SIGNED_OUT") {
+          router.replace("/login");
+          return;
+        }
 
-      // Use API route (service_role) so checkin_options and all fields are always returned.
-      // Only redirect to /login on 401 (not authenticated). Any other error (429, 5xx)
-      // must NOT redirect — that would create an infinite login ↔ portal loop.
-      const profileRes = await fetch("/api/patient-profile", {
-        headers: { Authorization: `Bearer ${data.session.access_token}` },
-      });
-      if (profileRes.status === 401) { router.replace("/login"); return; }
+        // Solo procesar la inicialización una vez (ignorar TOKEN_REFRESHED, etc.)
+        if (initialized) return;
+        if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN") return;
 
-      if (profileRes.ok) {
-        const profileJson = await profileRes.json() as { data: import("@/lib/supabase/types").Patient };
-        if (!profileJson.data) { router.replace("/login"); return; }
-        setPatient(profileJson.data);
-      } else if (profileRes.status === 404) {
-        // Usuario autenticado pero sin perfil de paciente vinculado aún.
-        // NO redirigir a /login — causaría un bucle infinito porque el login
-        // volvería a redirigir aquí al detectar la sesión activa.
-        setProfileNotFound(true);
-        return;
-      } else {
-        // 429, 5xx, etc. — fall back to the regular supabase client so the portal
-        // still loads; checkin_options may be empty until the rate window resets.
-        const { data: patientData } = await getPatientByUserId(data.session.user.id);
-        if (!patientData) { router.replace("/login"); return; }
-        setPatient(patientData);
+        initialized = true;
+
+        if (!session) { router.replace("/login"); return; }
+
+        userIdRef.current = session.user.id;
+
+        // Use API route (service_role) so checkin_options and all fields are always returned.
+        // Only redirect to /login on 401 (not authenticated). Any other error (429, 5xx)
+        // must NOT redirect — that would create an infinite login ↔ portal loop.
+        const profileRes = await fetch("/api/patient-profile", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (profileRes.status === 401) { router.replace("/login"); return; }
+
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json() as { data: import("@/lib/supabase/types").Patient };
+          if (!profileJson.data) { router.replace("/login"); return; }
+          setPatient(profileJson.data);
+        } else if (profileRes.status === 404) {
+          // Usuario autenticado pero sin perfil de paciente vinculado aún.
+          // NO redirigir a /login — causaría un bucle infinito porque el login
+          // volvería a redirigir aquí al detectar la sesión activa.
+          setProfileNotFound(true);
+          return;
+        } else {
+          // 429, 5xx, etc. — fall back to the regular supabase client so the portal
+          // still loads; checkin_options may be empty until the rate window resets.
+          const { data: patientData } = await getPatientByUserId(session.user.id);
+          if (!patientData) { router.replace("/login"); return; }
+          setPatient(patientData);
+        }
+        setAuthorized(true);
+        fetchBookedSlots();
+
+        // Show onboarding once on first visit
+        if (!localStorage.getItem(PATIENT_STORAGE_KEY)) {
+          setTimeout(() => setOnboardingOpen(true), 600);
+        }
       }
-      setAuthorized(true);
-      fetchBookedSlots();
+    );
 
-      // Show onboarding once on first visit
-      if (!localStorage.getItem(PATIENT_STORAGE_KEY)) {
-        setTimeout(() => setOnboardingOpen(true), 600);
-      }
-    });
+    return () => subscription.unsubscribe();
+    // fetchBookedSlots es estable (useCallback con []) — omitirla del array
+    // evita el error "used before declaration" sin cambiar el comportamiento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   /* ── Cargar datos del paciente ──────────────────────────── */
@@ -373,6 +402,10 @@ export default function PortalPacientePage() {
   }
 
   async function handleOpenResource(filePath: string | null, fileUrl: string | null) {
+    // Abrir la ventana de forma sincrónica (preserva el gesto del usuario)
+    // para que los navegadores móviles no bloqueen el popup.
+    const win = window.open("", "_blank");
+
     // Intentar URL firmada via API (service_role, crea el bucket si no existe)
     if (filePath && patient) {
       try {
@@ -384,7 +417,10 @@ export default function PortalPacientePage() {
           });
           if (res.ok) {
             const json = await res.json() as { url?: string };
-            if (json.url) { window.open(json.url, "_blank"); return; }
+            if (json.url) {
+              if (win) { win.location.href = json.url; } else { window.open(json.url, "_blank"); }
+              return;
+            }
           } else {
             const json = await res.json() as { error?: string };
             console.error("[resource-url]", json.error);
@@ -395,7 +431,12 @@ export default function PortalPacientePage() {
       }
     }
     // Fallback: URL pública directa (si el bucket es público o el recurso tiene file_url)
-    if (fileUrl) { window.open(fileUrl, "_blank"); }
+    if (fileUrl) {
+      if (win) { win.location.href = fileUrl; } else { window.open(fileUrl, "_blank"); }
+      return;
+    }
+    // Si no hay URL disponible, cerrar la ventana vacía
+    if (win) { win.close(); }
   }
 
   async function toggleGoal(id: number) {

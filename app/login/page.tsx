@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
-import { signIn, getSession, getProfile } from "@/lib/supabase/db";
+import { signIn, getProfile } from "@/lib/supabase/db";
+import { supabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,14 +20,25 @@ export default function LoginPage() {
   const [passwordTouched, setPasswordTouched] = useState(false);
 
   useEffect(() => {
-    getSession().then(({ data }) => {
-      if (!data.session) return;
-      getProfile(data.session.user.id).then(({ data: profile }) => {
-        if (profile?.role === "patient") router.replace("/portal");
-      });
-    });
+    // Cargar email recordado
     const remembered = localStorage.getItem("psicobienestar_remembered_email");
     if (remembered) { setEmail(remembered); setRemember(true); }
+
+    // Usar onAuthStateChange + INITIAL_SESSION para no redirigir antes de que
+    // el SDK haya terminado de inicializar. getSession() puede retornar null
+    // durante la inicialización y luego retornar una sesión válida, causando
+    // el bucle infinito login ↔ portal.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event !== "INITIAL_SESSION") return;
+        if (!session) return;
+        getProfile(session.user.id).then(({ data: profile }) => {
+          if (profile?.role === "patient") router.replace("/portal");
+        });
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   const cleanEmail    = email.trim().toLowerCase();
