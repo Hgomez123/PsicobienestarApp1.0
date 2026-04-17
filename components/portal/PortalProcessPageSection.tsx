@@ -6,31 +6,28 @@ type GoalItem = {
   done: boolean;
 };
 
-type NoteItem = {
-  content: string;
+type TaskItem = {
+  text: string;
   created_at: string;
 };
 
 type PortalProcessPageSectionProps = {
   goals: GoalItem[];
-  clinicalNotes: NoteItem[];
+  latestTask: TaskItem | null;
   onToggleGoal: (id: number) => void;
 };
 
 export default function PortalProcessPageSection({
   goals,
-  clinicalNotes,
+  latestTask,
   onToggleGoal,
 }: PortalProcessPageSectionProps) {
-  const activeTask  = goals.find(g => !g.done) ?? null;
-  const latestNote  = clinicalNotes[0] ?? null;
-
   return (
-    <section className="grid gap-6 xl:grid-cols-3">
+    <section className="grid gap-6 xl:grid-cols-2">
       {/* Objetivos actuales */}
       <Card>
         <div className="p-6">
-          <p className="text-sm text-slate-500">Objetivos actuales</p>
+          <p className="text-sm font-semibold text-slate-500">Objetivos actuales</p>
           {goals.length === 0 ? (
             <p className="mt-4 text-sm text-slate-400 italic">
               Tu psicóloga aún no ha definido objetivos.
@@ -47,8 +44,10 @@ export default function PortalProcessPageSection({
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  <span className="mt-0.5">{goal.done ? "✓" : "○"}</span>
-                  <span className={goal.done ? "line-through opacity-70" : ""}>{goal.text}</span>
+                  <span className="mt-0.5 shrink-0">{goal.done ? "✓" : "○"}</span>
+                  <span className={`min-w-0 break-words leading-6 ${goal.done ? "line-through opacity-70" : ""}`}>
+                    {goal.text}
+                  </span>
                 </button>
               ))}
             </div>
@@ -59,39 +58,22 @@ export default function PortalProcessPageSection({
       {/* Tarea activa */}
       <Card>
         <div className="p-6">
-          <p className="text-sm text-slate-500">Tarea activa</p>
-          {activeTask ? (
-            <p className="mt-4 text-sm leading-7 text-slate-700">
-              {activeTask.text}
-            </p>
-          ) : (
-            <p className="mt-4 text-sm text-slate-400 italic">
-              {goals.length === 0
-                ? "Tu psicóloga aún no ha asignado tareas."
-                : "Todas las tareas completadas. ¡Buen trabajo!"}
-            </p>
-          )}
-        </div>
-      </Card>
-
-      {/* Última nota */}
-      <Card>
-        <div className="p-6">
-          <p className="text-sm text-slate-500">Última nota</p>
-          {latestNote ? (
+          <p className="text-sm font-semibold text-slate-500">Tarea activa</p>
+          {latestTask ? (
             <>
-              <p className="mt-4 text-sm leading-7 text-slate-700">
-                {latestNote.content}
+              <p className="mt-4 min-w-0 break-words text-sm leading-7 text-slate-700 whitespace-pre-wrap">
+                {latestTask.text}
               </p>
               <p className="mt-3 text-xs text-slate-400">
-                {new Date(latestNote.created_at).toLocaleDateString("es-GT", {
+                Asignada el{" "}
+                {new Date(latestTask.created_at).toLocaleDateString("es-GT", {
                   day: "numeric", month: "long", year: "numeric",
                 })}
               </p>
             </>
           ) : (
             <p className="mt-4 text-sm text-slate-400 italic">
-              Tu psicóloga aún no ha registrado notas para ti.
+              Tu psicóloga aún no ha asignado una tarea.
             </p>
           )}
         </div>

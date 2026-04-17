@@ -70,9 +70,14 @@ export async function GET(req: NextRequest) {
   if (!/^[0-9a-f-]{36}$/i.test(patientId)) {
     return NextResponse.json({ error: "patientId inválido." }, { status: 400 });
   }
-  // Evitar path traversal
-  if (filePath.includes("..") || filePath.startsWith("/")) {
-    return NextResponse.json({ error: "Ruta inválida." }, { status: 400 });
+  // Evitar path traversal y confirmar que el archivo pertenece al paciente
+  const expectedPrefix = `patients/${patientId}/`;
+  if (
+    filePath.includes("..") ||
+    filePath.startsWith("/") ||
+    !filePath.startsWith(expectedPrefix)
+  ) {
+    return NextResponse.json({ error: "Ruta inválida o acceso denegado." }, { status: 403 });
   }
 
   /* ── Verificar propiedad ──────────────────────────────── */

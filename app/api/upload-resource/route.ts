@@ -113,12 +113,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
-  /* ── Generar URL pública (o usar signed URL al abrir) ─── */
-  const { data: urlData } = admin.storage.from(BUCKET).getPublicUrl(path);
-
+  // El bucket es privado — no se genera URL pública.
+  // El cliente usa /api/resource-url para obtener una URL firmada al momento de abrir.
   return NextResponse.json({
     success: true,
     path,
-    url: urlData.publicUrl,
+    url: null,
   });
 }

@@ -5,7 +5,7 @@
 
 import { supabase, supabaseDoctor } from "./client";
 import type {
-  Patient, Appointment, Goal, ClinicalNote,
+  Patient, Appointment, Goal, Task, ClinicalNote,
   Recommendation, Resource, Checkin, Notification,
   AppointmentRequest,
 } from "./types";
@@ -172,6 +172,24 @@ export async function deleteGoal(id: string) {
   return supabaseDoctor.from("goals").delete().eq("id", id);
 }
 
+// ── TASKS ────────────────────────────────────────────────────
+
+export async function createTask(data: Omit<Task, "id" | "created_at">) {
+  return supabaseDoctor.from("tasks").insert(data).select().single();
+}
+
+export async function getTaskHistory(patientId: string) {
+  return supabaseDoctor
+    .from("tasks")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+}
+
+export async function deleteTask(id: string) {
+  return supabaseDoctor.from("tasks").delete().eq("id", id);
+}
+
 // ── CLINICAL NOTES ───────────────────────────────────────────
 
 export async function getClinicalNotes(patientId: string) {
@@ -291,7 +309,8 @@ export async function getCheckins(patientId: string) {
 export async function getAllCheckins(doctorId: string) {
   return supabaseDoctor
     .from("checkins")
-    .select("*, patients(name, doctor_id)")
+    .select("*, patients!inner(name, doctor_id)")
+    .eq("patients.doctor_id", doctorId)
     .order("created_at", { ascending: false });
 }
 

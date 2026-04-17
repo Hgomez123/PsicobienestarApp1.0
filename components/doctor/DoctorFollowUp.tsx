@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  getClinicalNotes, updateClinicalNote, deleteClinicalNote,
+  getClinicalNotes,
   getGoals, createGoal, updateGoal, deleteGoal,
-  getDoctorCheckins,
+  getDoctorCheckins, createTask, getTaskHistory, deleteTask,
 } from "@/lib/supabase/db";
 import { supabaseDoctor } from "@/lib/supabase/client";
-import type { Patient, ClinicalNote, Goal, Checkin } from "@/lib/supabase/types";
+import type { Patient, ClinicalNote, Goal, Task, Checkin } from "@/lib/supabase/types";
 
 type Props = {
   doctorId: string;
@@ -17,7 +17,7 @@ type Props = {
   onPatientsChange: () => void;
 };
 
-type Tab = "notas" | "objetivos" | "checkins";
+type Tab = "objetivos" | "checkins";
 
 // ── Helpers para el tracker semanal ───────────────────────────
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -52,13 +52,15 @@ const EMOTION_PALETTE = [
 export default function DoctorFollowUp({ doctorId, patients, selectedPatient, onSelectPatient, onPatientsChange }: Props) {
   const [notes, setNotes]         = useState<ClinicalNote[]>([]);
   const [goals, setGoals]         = useState<Goal[]>([]);
+  const [taskHistory, setTaskHistory] = useState<Task[]>([]);
   const [checkins, setCheckins]   = useState<Omit<Checkin, "patient_id">[]>([]);
-  const [noteText, setNoteText]   = useState("");
   const [goalText, setGoalText]   = useState("");
-  const [editingNote, setEditingNote] = useState<{ id: string; content: string } | null>(null);
+  const [taskText, setTaskText]   = useState("");
+  const [savingTask, setSavingTask] = useState(false);
+  const [taskSaved, setTaskSaved] = useState(false);
+  const [taskError, setTaskError] = useState<string | null>(null);
   const [saving, setSaving]       = useState(false);
-  const [noteError, setNoteError] = useState<string | null>(null);
-  const [tab, setTab]             = useState<Tab>("notas");
+  const [tab, setTab]             = useState<Tab>("objetivos");
 
   // Check-in options state (per patient)
   const [checkinOpts, setCheckinOpts]   = useState<string[]>([]);
@@ -71,14 +73,16 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;
-    const [{ data: n }, { data: g }, { data: c }] = await Promise.all([
+    const [{ data: n }, { data: g }, { data: c }, { data: th }] = await Promise.all([
       getClinicalNotes(selectedPatient.id),
       getGoals(selectedPatient.id),
       getDoctorCheckins(selectedPatient.id),
+      getTaskHistory(selectedPatient.id),
     ]);
     if (n) setNotes(n);
     if (g) setGoals(g);
     if (c) setCheckins(c as Omit<Checkin, "patient_id">[]);
+    if (th) setTaskHistory(th);
     setCheckinOpts(selectedPatient.checkin_options ?? []);
   }, [selectedPatient]);
 
@@ -97,52 +101,6 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
     return () => { supabaseDoctor.removeChannel(ch); };
   }, [selectedPatient, load]);
 
-  // ── Notas ────────────────────────────────────────────────────
-  async function handleAddNote() {
-    if (!noteText.trim() || !selectedPatient) return;
-    setSaving(true);
-    setNoteError(null);
-    try {
-      const { data: { session } } = await supabaseDoctor.auth.getSession();
-      if (!session?.access_token) {
-        setNoteError("No hay sesión activa. Recarga la página.");
-        setSaving(false);
-        return;
-      }
-      const res = await fetch("/api/clinical-notes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ patientId: selectedPatient.id, content: noteText.trim() }),
-      });
-      if (!res.ok) {
-        const json = await res.json() as { error?: string };
-        setNoteError(json.error ?? "Error al guardar la nota.");
-        setSaving(false);
-        return;
-      }
-      setNoteText("");
-    } catch {
-      setNoteError("Error de red. Intenta de nuevo.");
-    } finally {
-      setSaving(false);
-      load();
-    }
-  }
-
-  async function handleUpdateNote() {
-    if (!editingNote) return;
-    setSaving(true);
-    await updateClinicalNote(editingNote.id, editingNote.content);
-    setEditingNote(null); setSaving(false); load();
-  }
-
-  async function handleDeleteNote(id: string) {
-    await deleteClinicalNote(id); load();
-  }
-
   // ── Objetivos ────────────────────────────────────────────────
   async function handleAddGoal() {
     if (!goalText.trim() || !selectedPatient) return;
@@ -157,6 +115,31 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
 
   async function handleDeleteGoal(id: string) {
     await deleteGoal(id); load();
+  }
+
+  async function handleSaveTask() {
+    if (!taskText.trim() || !selectedPatient) return;
+    setSavingTask(true);
+    setTaskError(null);
+    const { error } = await createTask({
+      patient_id: selectedPatient.id,
+      doctor_id: doctorId,
+      text: taskText.trim(),
+    });
+    setSavingTask(false);
+    if (error) {
+      setTaskError(`Error al guardar: ${error.message}`);
+      return;
+    }
+    setTaskText("");
+    setTaskSaved(true);
+    setTimeout(() => setTaskSaved(false), 3000);
+    load();
+  }
+
+  async function handleDeleteTask(id: string) {
+    await deleteTask(id);
+    load();
   }
 
   // ── Opciones Check-in ────────────────────────────────────────
@@ -224,9 +207,8 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
   const input = "w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-[#6F98BE] focus:bg-white focus:ring-2 focus:ring-[#6F98BE]/20";
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "notas",    label: `📝 Notas (${notes.length})` },
-    { key: "objetivos",label: `🎯 Objetivos (${goals.length})` },
-    { key: "checkins", label: `✅ Check-ins (${checkins.length})` },
+    { key: "objetivos", label: `🎯 Objetivos (${goals.length})` },
+    { key: "checkins",  label: `✅ Check-ins (${checkins.length})` },
   ];
 
   return (
@@ -270,63 +252,98 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
             ))}
           </div>
 
-          {/* ── Notas clínicas ─────────────────────────────────── */}
-          {tab === "notas" && (
-            <div className="space-y-4">
-              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
-                <p className="mb-3 text-sm font-medium text-slate-700">Nueva nota clínica</p>
-                <textarea rows={4} placeholder="Observaciones de la sesión..." value={noteText}
-                  onChange={e => setNoteText(e.target.value)}
-                  className={`${input} resize-none`}/>
-                <button onClick={handleAddNote} disabled={saving || !noteText.trim()}
-                  className="mt-3 rounded-full bg-[#1E5A85] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#6F98BE] disabled:opacity-50">
-                  {saving ? "Guardando..." : "Guardar nota"}
-                </button>
-                {noteError && (
-                  <p className="mt-2 text-xs text-red-500">{noteError}</p>
-                )}
-              </div>
-
-              {notes.map(note => (
-                <div key={note.id} className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
-                  {editingNote?.id === note.id ? (
-                    <div className="space-y-3">
-                      <textarea rows={4} value={editingNote.content}
-                        onChange={e => setEditingNote({ ...editingNote, content: e.target.value })}
-                        className={`${input} resize-none`}/>
-                      <div className="flex gap-2">
-                        <button onClick={handleUpdateNote} disabled={saving}
-                          className="rounded-full bg-[#1E5A85] px-4 py-2 text-xs font-medium text-white transition hover:bg-[#6F98BE] disabled:opacity-50">
-                          {saving ? "Guardando..." : "Guardar"}
-                        </button>
-                        <button onClick={() => setEditingNote(null)} className="rounded-full border border-slate-200 px-4 py-2 text-xs text-slate-600">Cancelar</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{note.content}</p>
-                      <div className="mt-3 flex items-center justify-between">
-                        <p className="text-xs text-slate-400">{new Date(note.created_at).toLocaleDateString("es-GT", { day: "numeric", month: "long", year: "numeric" })}</p>
-                        <div className="flex gap-2">
-                          <button onClick={() => setEditingNote({ id: note.id, content: note.content })}
-                            className="rounded-xl border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:border-[#6F98BE] hover:text-[#1E5A85]">Editar</button>
-                          <button onClick={() => handleDeleteNote(note.id)}
-                            className="rounded-xl border border-red-100 bg-red-50 px-3 py-1 text-xs text-red-500 hover:bg-red-100">Eliminar</button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-              {notes.length === 0 && <p className="py-6 text-center text-sm text-slate-400">Sin notas clínicas aún.</p>}
-            </div>
-          )}
-
           {/* ── Objetivos ──────────────────────────────────────── */}
           {tab === "objetivos" && (
             <div className="space-y-4">
+
+              {/* Nueva tarea */}
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
-                <p className="mb-3 text-sm font-medium text-slate-700">Nuevo objetivo terapéutico</p>
+                <p className="mb-1 text-sm font-semibold text-slate-700">Asignar tarea al paciente</p>
+                <p className="mb-3 text-xs text-slate-400">
+                  La nueva tarea quedará registrada en el historial y será visible de inmediato en el portal del paciente.
+                </p>
+                <textarea
+                  rows={5}
+                  placeholder="Describe la tarea o ejercicio que el paciente debe realizar entre sesiones..."
+                  value={taskText}
+                  onChange={e => setTaskText(e.target.value)}
+                  className={`${input} resize-y`}
+                />
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    onClick={handleSaveTask}
+                    disabled={savingTask || !taskText.trim()}
+                    className="rounded-full bg-[#1E5A85] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#6F98BE] disabled:opacity-50"
+                  >
+                    {savingTask ? "Guardando..." : "Guardar tarea"}
+                  </button>
+                  {taskSaved && (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-green-600">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6.5" stroke="#22c55e"/>
+                        <path d="M4 7l2 2 4-4" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Tarea guardada y visible al paciente
+                    </span>
+                  )}
+                </div>
+                {taskError && (
+                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                    <p className="text-xs font-semibold text-red-600">Error al guardar la tarea</p>
+                    <p className="mt-1 break-words text-xs text-red-500 leading-5">{taskError}</p>
+                    <p className="mt-2 text-xs text-red-400">
+                      Si el error menciona &quot;relation tasks does not exist&quot;, ejecuta la migración SQL en Supabase.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Historial de tareas */}
+              {taskHistory.length > 0 && (
+                <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+                  <p className="mb-4 text-sm font-semibold text-slate-700">
+                    Historial de tareas
+                    <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
+                      {taskHistory.length}
+                    </span>
+                  </p>
+                  <div className="space-y-3">
+                    {taskHistory.map((t, idx) => (
+                      <div
+                        key={t.id}
+                        className={`rounded-2xl border p-4 ${idx === 0 ? "border-[#6F98BE]/40 bg-[#EEF4F8]" : "border-slate-100 bg-slate-50"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            {idx === 0 && (
+                              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-[#1E5A85]">
+                                Tarea actual
+                              </p>
+                            )}
+                            <p className="break-words text-sm leading-6 text-slate-800 whitespace-pre-wrap">{t.text}</p>
+                            <p className="mt-2 text-xs text-slate-400">
+                              {new Date(t.created_at).toLocaleDateString("es-GT", {
+                                weekday: "short", day: "numeric", month: "long", year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteTask(t.id)}
+                            title="Eliminar tarea"
+                            className="mt-0.5 shrink-0 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs text-red-500 transition hover:bg-red-100 hover:text-red-600"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Objetivos terapéuticos */}
+              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+                <p className="mb-3 text-sm font-medium text-slate-700">Objetivos terapéuticos</p>
                 <div className="flex gap-3">
                   <input type="text" placeholder="Ej. Reducir rumiación cognitiva" value={goalText}
                     onChange={e => setGoalText(e.target.value)}
@@ -342,13 +359,13 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm space-y-3">
                 {goals.length === 0 && <p className="py-4 text-center text-sm text-slate-400">Sin objetivos aún.</p>}
                 {goals.map(goal => (
-                  <div key={goal.id} className="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:bg-slate-50">
+                  <div key={goal.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3 transition hover:bg-slate-50">
                     <button onClick={() => handleToggleGoal(goal)}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs transition ${goal.done ? "border-[#6F98BE] bg-[#6F98BE] text-white" : "border-slate-300 hover:border-[#6F98BE]"}`}>
+                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs transition ${goal.done ? "border-[#6F98BE] bg-[#6F98BE] text-white" : "border-slate-300 hover:border-[#6F98BE]"}`}>
                       {goal.done && "✓"}
                     </button>
-                    <p className={`flex-1 text-sm ${goal.done ? "text-slate-400 line-through" : "text-slate-800"}`}>{goal.text}</p>
-                    <button onClick={() => handleDeleteGoal(goal.id)} className="shrink-0 text-xs text-red-400 hover:text-red-600">✕</button>
+                    <p className={`min-w-0 flex-1 break-words text-sm leading-6 ${goal.done ? "text-slate-400 line-through" : "text-slate-800"}`}>{goal.text}</p>
+                    <button onClick={() => handleDeleteGoal(goal.id)} className="mt-0.5 shrink-0 text-xs text-red-400 hover:text-red-600">✕</button>
                   </div>
                 ))}
                 {goals.length > 0 && (

@@ -57,6 +57,7 @@ export default function PortalPacientePage() {
   const [goals, setGoals]                     = useState<GoalItem[]>([]);
   const [goalIds, setGoalIds]                 = useState<string[]>([]);
   const [clinicalNotes, setClinicalNotes]     = useState<{ content: string; created_at: string }[]>([]);
+  const [latestTask, setLatestTask]           = useState<{ text: string; created_at: string } | null>(null);
 
   const [activeSection, setActiveSection]       = useState<NavItem>("Inicio");
   const [navHistory, setNavHistory]             = useState<NavItem[]>([]);
@@ -166,6 +167,21 @@ export default function PortalPacientePage() {
     } catch { /* silencioso */ }
   }, []);
 
+  const loadLatestTask = useCallback(async (patientId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/patient-task?patientId=${patientId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const json = await res.json() as { data: { text: string; created_at: string } | null };
+        setLatestTask(json.data ?? null);
+      }
+    } catch { /* silencioso */ }
+  }, []);
+
   // Re-carga el registro del paciente via API service-role (bypassa RLS para checkin_options).
   // Si la API falla por cualquier razón, NO redirige — solo mantiene el estado actual.
   const loadPatient = useCallback(async () => {
@@ -210,8 +226,11 @@ export default function PortalPacientePage() {
       getPatientAppointmentRequests(patient.id),
     ]);
 
-    // Notas clínicas via API (evita RLS que bloquea al paciente)
-    await loadClinicalNotes(patient.id);
+    // Notas clínicas y tarea activa via API (evita RLS que bloquea al paciente)
+    await Promise.all([
+      loadClinicalNotes(patient.id),
+      loadLatestTask(patient.id),
+    ]);
 
     if (recs) setRecommendations(recs.map(r => ({ title: r.title, text: r.content })));
     if (res)  setResources(res.map(r => ({ type: r.type, title: r.title, desc: r.description ?? "", filePath: r.file_path ?? null, fileUrl: r.file_url ?? null })));
@@ -255,7 +274,7 @@ export default function PortalPacientePage() {
       setGoals(gs.map((g, i) => ({ id: i, text: g.text, done: g.done })));
       setGoalIds(gs.map(g => g.id));
     }
-  }, [patient, loadClinicalNotes]);
+  }, [patient, loadClinicalNotes, loadLatestTask]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -287,8 +306,11 @@ export default function PortalPacientePage() {
       )
       .on("postgres_changes",
         { event: "*", schema: "public", table: "clinical_notes", filter: `patient_id=eq.${patient.id}` },
-        // Intenta recibir el evento; si RLS lo bloquea, el polling de 30s lo cubre
         () => loadClinicalNotes(patient.id)
+      )
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "tasks", filter: `patient_id=eq.${patient.id}` },
+        () => loadLatestTask(patient.id)
       )
       // Detecta cambios en el perfil del paciente (ej: opciones de check-in actualizadas por la doctora)
       .on("postgres_changes",
@@ -298,7 +320,7 @@ export default function PortalPacientePage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [patient, load, loadClinicalNotes, loadPatient]);
+  }, [patient, load, loadClinicalNotes, loadLatestTask, loadPatient]);
 
   /* ── Polling notas clínicas (por si RLS bloquea real-time) ── */
   useEffect(() => {
@@ -788,7 +810,7 @@ export default function PortalPacientePage() {
             {activeSection === "Mi proceso" && (
               <PortalProcessPageSection
                 goals={goals}
-                clinicalNotes={clinicalNotes}
+                latestTask={latestTask}
                 onToggleGoal={toggleGoal}
               />
             )}

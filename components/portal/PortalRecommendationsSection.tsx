@@ -30,12 +30,12 @@ export default function PortalRecommendationsSection({
             >
               <div className="flex items-start gap-2.5">
                 <span className="shrink-0 text-lg">{p.emoji}</span>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: p.accent }}>
                     {p.tag}
                   </p>
-                  <h2 className="mt-1.5 text-[14px] font-bold tracking-tight text-slate-900">{item.title}</h2>
-                  <p className="mt-2 text-[12.5px] leading-[1.7] text-slate-600">{item.text}</p>
+                  <h2 className="mt-1.5 break-words text-[14px] font-bold tracking-tight text-slate-900">{item.title}</h2>
+                  <p className="mt-2 break-words text-[12.5px] leading-[1.7] text-slate-600 whitespace-pre-wrap">{item.text}</p>
                 </div>
               </div>
             </div>
@@ -47,10 +47,10 @@ export default function PortalRecommendationsSection({
           style={{ background: "rgba(0,0,0,0.02)", border: "1px dashed rgba(0,0,0,0.1)" }}>
           <div className="flex items-start gap-2.5">
             <span className="shrink-0 text-lg">🌿</span>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Próximo enfoque</p>
-              <h2 className="mt-1.5 text-[14px] font-bold text-slate-900">Observación emocional diaria</h2>
-              <p className="mt-2 text-[12.5px] leading-[1.7] text-slate-500">
+              <h2 className="mt-1.5 break-words text-[14px] font-bold text-slate-900">Observación emocional diaria</h2>
+              <p className="mt-2 break-words text-[12.5px] leading-[1.7] text-slate-500 whitespace-pre-wrap">
                 Nota cuándo cambia tu energía, qué lo provoca y cómo responde tu cuerpo. Sin juicio.
               </p>
             </div>

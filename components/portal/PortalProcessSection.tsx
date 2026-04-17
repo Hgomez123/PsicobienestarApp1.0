@@ -79,7 +79,7 @@ export default function PortalProcessSection({
                   </svg>
                 )}
               </div>
-              <span className={`text-[13px] leading-5 transition-colors duration-200 ${goal.done ? "text-slate-400 line-through" : "text-slate-800"}`}>
+              <span className={`min-w-0 break-words text-[13px] leading-5 transition-colors duration-200 ${goal.done ? "text-slate-400 line-through" : "text-slate-800"}`}>
                 {goal.text}
               </span>
             </button>

@@ -52,6 +52,14 @@ export interface Goal {
   updated_at: string;
 }
 
+export interface Task {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  text: string;
+  created_at: string;
+}
+
 export interface ClinicalNote {
   id: string;
   patient_id: string;
@@ -124,6 +132,7 @@ export type Database = {
       patients:             { Row: Patient };
       appointments:         { Row: Appointment };
       goals:                { Row: Goal };
+      tasks:                { Row: Task };
       clinical_notes:       { Row: ClinicalNote };
       recommendations:      { Row: Recommendation };
       resources:            { Row: Resource };
