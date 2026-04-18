@@ -57,7 +57,7 @@ export default function PortalPacientePage() {
   const [goals, setGoals]                     = useState<GoalItem[]>([]);
   const [goalIds, setGoalIds]                 = useState<string[]>([]);
   const [clinicalNotes, setClinicalNotes]     = useState<{ content: string; created_at: string }[]>([]);
-  const [latestTask, setLatestTask]           = useState<{ text: string; created_at: string } | null>(null);
+  const [tasks, setTasks]                     = useState<{ id: string; text: string; created_at: string }[]>([]);
 
   const [activeSection, setActiveSection]       = useState<NavItem>("Inicio");
   const [navHistory, setNavHistory]             = useState<NavItem[]>([]);
@@ -176,8 +176,8 @@ export default function PortalPacientePage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        const json = await res.json() as { data: { text: string; created_at: string } | null };
-        setLatestTask(json.data ?? null);
+        const json = await res.json() as { data: { id: string; text: string; created_at: string }[] };
+        setTasks(json.data ?? []);
       }
     } catch { /* silencioso */ }
   }, []);
@@ -810,7 +810,7 @@ export default function PortalPacientePage() {
             {activeSection === "Mi proceso" && (
               <PortalProcessPageSection
                 goals={goals}
-                latestTask={latestTask}
+                tasks={tasks}
                 onToggleGoal={toggleGoal}
               />
             )}

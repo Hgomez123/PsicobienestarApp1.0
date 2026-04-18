@@ -1,9 +1,9 @@
 /**
  * GET /api/patient-task?patientId=...
  *
- * Retorna la tarea más reciente asignada al paciente por su psicóloga.
+ * Retorna todas las tareas asignadas al paciente por su psicóloga,
+ * ordenadas de más reciente a más antigua.
  * Solo puede ser llamado por el paciente dueño de ese patientId.
- * Verifica: 1) JWT válido, 2) rol = patient, 3) patient.user_id coincide.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Parámetro inválido." }, { status: 400 });
   }
 
-  // Verifica que este paciente le pertenece al usuario autenticado — evita cross-patient
   const owns = await patientOwns(userId, patientId);
   if (!owns) return NextResponse.json({ error: "Acceso denegado." }, { status: 403 });
 
@@ -48,13 +47,11 @@ export async function GET(req: NextRequest) {
     .from("tasks")
     .select("id, text, created_at")
     .eq("patient_id", patientId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .order("created_at", { ascending: false });
 
-  if (error && error.code !== "PGRST116") {
+  if (error) {
     return NextResponse.json({ error: "Error interno." }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data ?? null });
+  return NextResponse.json({ data: data ?? [] });
 }
