@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  getClinicalNotes,
   getGoals, createGoal, updateGoal, deleteGoal,
   getDoctorCheckins, createTask, getTaskHistory, deleteTask,
 } from "@/lib/supabase/db";
 import { supabaseDoctor } from "@/lib/supabase/client";
-import type { Patient, ClinicalNote, Goal, Task, Checkin } from "@/lib/supabase/types";
+import type { Patient, Goal, Task, Checkin } from "@/lib/supabase/types";
 
 type Props = {
   doctorId: string;
@@ -17,7 +16,7 @@ type Props = {
   onPatientsChange: () => void;
 };
 
-type Tab = "objetivos" | "checkins";
+type Tab = "tareas" | "objetivos" | "checkins";
 
 // ── Helpers para el tracker semanal ───────────────────────────
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -50,7 +49,6 @@ const EMOTION_PALETTE = [
 ];
 
 export default function DoctorFollowUp({ doctorId, patients, selectedPatient, onSelectPatient, onPatientsChange }: Props) {
-  const [notes, setNotes]         = useState<ClinicalNote[]>([]);
   const [goals, setGoals]         = useState<Goal[]>([]);
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
   const [checkins, setCheckins]   = useState<Omit<Checkin, "patient_id">[]>([]);
@@ -60,7 +58,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
   const [taskSaved, setTaskSaved] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [saving, setSaving]       = useState(false);
-  const [tab, setTab]             = useState<Tab>("objetivos");
+  const [tab, setTab]             = useState<Tab>("tareas");
 
   // Check-in options state (per patient)
   const [checkinOpts, setCheckinOpts]   = useState<string[]>([]);
@@ -73,13 +71,11 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;
-    const [{ data: n }, { data: g }, { data: c }, { data: th }] = await Promise.all([
-      getClinicalNotes(selectedPatient.id),
+    const [{ data: g }, { data: c }, { data: th }] = await Promise.all([
       getGoals(selectedPatient.id),
       getDoctorCheckins(selectedPatient.id),
       getTaskHistory(selectedPatient.id),
     ]);
-    if (n) setNotes(n);
     if (g) setGoals(g);
     if (c) setCheckins(c as Omit<Checkin, "patient_id">[]);
     if (th) setTaskHistory(th);
@@ -207,6 +203,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
   const input = "w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-[#6F98BE] focus:bg-white focus:ring-2 focus:ring-[#6F98BE]/20";
 
   const tabs: { key: Tab; label: string }[] = [
+    { key: "tareas",    label: `📋 Tareas (${taskHistory.length})` },
     { key: "objetivos", label: `🎯 Objetivos (${goals.length})` },
     { key: "checkins",  label: `✅ Check-ins (${checkins.length})` },
   ];
@@ -252,8 +249,8 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
             ))}
           </div>
 
-          {/* ── Objetivos ──────────────────────────────────────── */}
-          {tab === "objetivos" && (
+          {/* ── Tareas ─────────────────────────────────────────── */}
+          {tab === "tareas" && (
             <div className="space-y-4">
 
               {/* Nueva tarea */}
@@ -299,14 +296,16 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
               </div>
 
               {/* Historial de tareas */}
-              {taskHistory.length > 0 && (
-                <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
-                  <p className="mb-4 text-sm font-semibold text-slate-700">
-                    Historial de tareas
-                    <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
-                      {taskHistory.length}
-                    </span>
-                  </p>
+              <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
+                <p className="mb-4 text-sm font-semibold text-slate-700">
+                  Historial de tareas
+                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
+                    {taskHistory.length}
+                  </span>
+                </p>
+                {taskHistory.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-slate-400">Sin tareas asignadas aún.</p>
+                ) : (
                   <div className="space-y-3">
                     {taskHistory.map((t, idx) => (
                       <div
@@ -338,8 +337,14 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Objetivos ──────────────────────────────────────── */}
+          {tab === "objetivos" && (
+            <div className="space-y-4">
 
               {/* Objetivos terapéuticos */}
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
