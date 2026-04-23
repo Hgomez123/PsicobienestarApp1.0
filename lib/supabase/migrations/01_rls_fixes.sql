@@ -2,7 +2,15 @@
 --  PSICOBIENESTAR — FIXES DE SEGURIDAD CRÍTICOS (RLS)
 --  Ejecutar en: Supabase → SQL Editor → New Query
 --  Revertible: todos los DROP POLICY dejan la versión anterior.
+--  Idempotente: puede re-ejecutarse sin error (cada create tiene su drop).
 -- ============================================================
+
+-- ── ANTES DE EJECUTAR — verificación obligatoria ──
+-- 1) Ejecutar: select distinct doctor_id from public.patients;
+-- 2) Ejecutar: select id, email from public.profiles where role = 'doctor';
+-- 3) Confirmar que TODOS los doctor_id del paso 1 aparecen en el paso 2.
+--    Si no coinciden, NO aplicar este fix sin antes regularizar la data.
+-- ─────────────────────────────────────────────────
 
 -- ── FIX C3: trigger no permite auto-asignar rol 'doctor' ──────
 -- Antes: tomaba role del metadata del signup.
@@ -49,17 +57,21 @@ create policy "Bloquear delete directo a profiles" on public.profiles
 
 drop policy if exists "Doctora gestiona pacientes" on public.patients;
 
+drop policy if exists "Doctora lee pacientes" on public.patients;
 create policy "Doctora lee pacientes" on public.patients
   for select using (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora inserta pacientes" on public.patients;
 create policy "Doctora inserta pacientes" on public.patients
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora actualiza pacientes" on public.patients;
 create policy "Doctora actualiza pacientes" on public.patients
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora elimina pacientes" on public.patients;
 create policy "Doctora elimina pacientes" on public.patients
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -72,17 +84,21 @@ create policy "Paciente ve su registro" on public.patients
 
 drop policy if exists "Doctora gestiona citas" on public.appointments;
 
+drop policy if exists "Doctora lee citas" on public.appointments;
 create policy "Doctora lee citas" on public.appointments
   for select using (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora inserta citas" on public.appointments;
 create policy "Doctora inserta citas" on public.appointments
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora actualiza citas" on public.appointments;
 create policy "Doctora actualiza citas" on public.appointments
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
 
+drop policy if exists "Doctora elimina citas" on public.appointments;
 create policy "Doctora elimina citas" on public.appointments
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -90,14 +106,21 @@ create policy "Doctora elimina citas" on public.appointments
 
 drop policy if exists "Doctora gestiona objetivos" on public.goals;
 
+drop policy if exists "Doctora lee objetivos" on public.goals;
 create policy "Doctora lee objetivos" on public.goals
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta objetivos" on public.goals;
 create policy "Doctora inserta objetivos" on public.goals
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza objetivos" on public.goals;
 create policy "Doctora actualiza objetivos" on public.goals
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina objetivos" on public.goals;
 create policy "Doctora elimina objetivos" on public.goals
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -105,14 +128,21 @@ create policy "Doctora elimina objetivos" on public.goals
 
 drop policy if exists "Doctora gestiona notas" on public.clinical_notes;
 
+drop policy if exists "Doctora lee notas" on public.clinical_notes;
 create policy "Doctora lee notas" on public.clinical_notes
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta notas" on public.clinical_notes;
 create policy "Doctora inserta notas" on public.clinical_notes
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza notas" on public.clinical_notes;
 create policy "Doctora actualiza notas" on public.clinical_notes
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina notas" on public.clinical_notes;
 create policy "Doctora elimina notas" on public.clinical_notes
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -120,14 +150,21 @@ create policy "Doctora elimina notas" on public.clinical_notes
 
 drop policy if exists "Doctora gestiona recomendaciones" on public.recommendations;
 
+drop policy if exists "Doctora lee recomendaciones" on public.recommendations;
 create policy "Doctora lee recomendaciones" on public.recommendations
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta recomendaciones" on public.recommendations;
 create policy "Doctora inserta recomendaciones" on public.recommendations
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza recomendaciones" on public.recommendations;
 create policy "Doctora actualiza recomendaciones" on public.recommendations
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina recomendaciones" on public.recommendations;
 create policy "Doctora elimina recomendaciones" on public.recommendations
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -135,14 +172,21 @@ create policy "Doctora elimina recomendaciones" on public.recommendations
 
 drop policy if exists "Doctora gestiona recursos" on public.resources;
 
+drop policy if exists "Doctora lee recursos" on public.resources;
 create policy "Doctora lee recursos" on public.resources
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta recursos" on public.resources;
 create policy "Doctora inserta recursos" on public.resources
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza recursos" on public.resources;
 create policy "Doctora actualiza recursos" on public.resources
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina recursos" on public.resources;
 create policy "Doctora elimina recursos" on public.resources
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -158,12 +202,17 @@ create policy "Doctora marca leído" on public.checkins
 
 drop policy if exists "Doctora gestiona notificaciones" on public.notifications;
 
+drop policy if exists "Doctora lee notificaciones" on public.notifications;
 create policy "Doctora lee notificaciones" on public.notifications
   for select using (doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza notificaciones" on public.notifications;
 create policy "Doctora actualiza notificaciones" on public.notifications
   for update
   using (doctor_id = auth.uid())
   with check (doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina notificaciones" on public.notifications;
 create policy "Doctora elimina notificaciones" on public.notifications
   for delete using (doctor_id = auth.uid());
 -- INSERT lo hace el servidor con service_role (no hace falta policy)
@@ -172,12 +221,17 @@ create policy "Doctora elimina notificaciones" on public.notifications
 
 drop policy if exists "Doctora gestiona solicitudes" on public.appointment_requests;
 
+drop policy if exists "Doctora lee solicitudes" on public.appointment_requests;
 create policy "Doctora lee solicitudes" on public.appointment_requests
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza solicitudes" on public.appointment_requests;
 create policy "Doctora actualiza solicitudes" on public.appointment_requests
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina solicitudes" on public.appointment_requests;
 create policy "Doctora elimina solicitudes" on public.appointment_requests
   for delete using (public.is_doctor() and doctor_id = auth.uid());
 
@@ -194,16 +248,25 @@ create table if not exists public.tasks (
 
 alter table public.tasks enable row level security;
 
+drop policy if exists "Doctora lee tareas" on public.tasks;
 create policy "Doctora lee tareas" on public.tasks
   for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta tareas" on public.tasks;
 create policy "Doctora inserta tareas" on public.tasks
   for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza tareas" on public.tasks;
 create policy "Doctora actualiza tareas" on public.tasks
   for update
   using (public.is_doctor() and doctor_id = auth.uid())
   with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina tareas" on public.tasks;
 create policy "Doctora elimina tareas" on public.tasks
   for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus tareas" on public.tasks;
 create policy "Paciente ve sus tareas" on public.tasks
   for select using (public.is_own_patient(patient_id));
 
@@ -235,6 +298,7 @@ create index if not exists audit_log_actor_idx   on public.audit_log(actor_id, c
 
 alter table public.audit_log enable row level security;
 -- Solo service_role escribe. La doctora puede leer sus propios accesos.
+drop policy if exists "Doctora lee sus logs" on public.audit_log;
 create policy "Doctora lee sus logs" on public.audit_log
   for select using (public.is_doctor() and actor_id = auth.uid());
 
