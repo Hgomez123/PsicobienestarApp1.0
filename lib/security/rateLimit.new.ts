@@ -20,9 +20,12 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 type Profile = "strict" | "medium" | "lenient";
 
-const hasUpstash =
-  !!process.env.UPSTASH_REDIS_REST_URL &&
-  !!process.env.UPSTASH_REDIS_REST_TOKEN;
+const hasUrl   = !!process.env.UPSTASH_REDIS_REST_URL;
+const hasToken = !!process.env.UPSTASH_REDIS_REST_TOKEN;
+const hasUpstash = hasUrl && hasToken;
+// Misconfig: una env definida pero no la otra. En producción se
+// considera peor que no tener ninguna — log explícito, fail closed.
+const hasPartialUpstash = (hasUrl || hasToken) && !hasUpstash;
 
 // ── Cliente Redis (singleton) ──────────────────────────────
 const redis = hasUpstash ? Redis.fromEnv() : null;
@@ -107,18 +110,39 @@ export async function checkRateLimit(
   const limiter = limiters[profile];
 
   if (!limiter) {
-    // Dev sin Upstash: usar memoria (NO sirve en Vercel serverless)
     if (process.env.NODE_ENV === "production") {
-      // Fail CLOSED en prod si no hay Redis configurado
-      console.error("[rateLimit] Upstash no configurado en producción — fallando cerrado");
+      // Fail CLOSED: distinguir misconfig parcial de ausencia total.
+      if (hasPartialUpstash) {
+        console.error(
+          "[rateLimit] MISCONFIG — solo una de UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN " +
+          "está definida en producción. Fallando cerrado.",
+        );
+      } else {
+        console.error("[rateLimit] Upstash no configurado en producción — fallando cerrado");
+      }
       return { allowed: false, retryAfterSec: 60 };
+    }
+    // Dev sin Upstash (o con config parcial): usar memoria
+    if (hasPartialUpstash) {
+      console.warn(
+        "[rateLimit] config parcial de Upstash detectada en dev — usando memoria",
+      );
     }
     return memCheck(key, profile);
   }
 
-  const { success, reset } = await limiter.limit(key);
-  if (success) return { allowed: true };
-
-  const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
-  return { allowed: false, retryAfterSec };
+  try {
+    const { success, reset } = await limiter.limit(key);
+    if (success) return { allowed: true };
+    const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+    return { allowed: false, retryAfterSec };
+  } catch (err) {
+    if (process.env.NODE_ENV === "production") {
+      // Fail CLOSED en prod si Upstash está down o devuelve error
+      console.error("[rateLimit] Upstash call falló — fail CLOSED:", err);
+      return { allowed: false, retryAfterSec: 60 };
+    }
+    console.warn("[rateLimit] Upstash call falló en dev — fail OPEN:", err);
+    return { allowed: true };
+  }
 }
