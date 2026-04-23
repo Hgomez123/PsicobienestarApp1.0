@@ -43,7 +43,7 @@ deja claro que es un rename puro:
 **Sin fecha de EOL** documentada, pero la deprecación ya tiene 2 minor
 versions y seguirá el patrón típico de Next (probable removal en v17.x–v18.x).
 
-**Fase afectada:** Fase 4 (middleware con CSP nonce, CORS hard-fail, COOP/CORP).
+**Fase afectada:** Fase 3 (proxy con CSP nonce, CORS hard-fail, COOP/CORP).
 Ese trabajo va sobre este mismo archivo.
 
 **Opciones consideradas:**

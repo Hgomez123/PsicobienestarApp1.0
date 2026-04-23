@@ -11,7 +11,7 @@ typescript: {
 
   /**
    * Cabeceras de seguridad HTTP aplicadas a nivel de servidor.
-   * El middleware las complementa por si algún path queda fuera.
+   * El proxy las complementa por si algún path queda fuera.
    */
   async headers() {
     return [
