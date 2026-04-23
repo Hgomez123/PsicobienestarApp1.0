@@ -25,6 +25,46 @@ Observaciones y pendientes detectados durante la auditoría de seguridad. Se van
   una corrida de carga larga podría consumir RAM. Fix futuro: eviction por TTL
   o tamaño máximo (LRU liviano).
 
+### Next.js 16 — migración middleware → proxy
+
+Next 16.0.0 renombró la convención `middleware.ts` a `proxy.ts`. La deprecación
+emite warning en cada build/dev desde nuestro bump a 16.2.4. El doc local
+(`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`)
+deja claro que es un rename puro:
+
+- Archivo: `middleware.ts` → `proxy.ts`.
+- Función: `export function middleware(...)` → `export function proxy(...)`.
+- `NextRequest`, `NextResponse`, `config.matcher`, cookies API, headers API:
+  todos idénticos. Sin cambios de firma ni de tipos.
+- Flags avanzados en `next.config.ts` también renombrados
+  (`skipMiddlewareUrlNormalize` → `skipProxyUrlNormalize`). **No aplica** —
+  no los usamos.
+
+**Sin fecha de EOL** documentada, pero la deprecación ya tiene 2 minor
+versions y seguirá el patrón típico de Next (probable removal en v17.x–v18.x).
+
+**Fase afectada:** Fase 4 (middleware con CSP nonce, CORS hard-fail, COOP/CORP).
+Ese trabajo va sobre este mismo archivo.
+
+**Opciones consideradas:**
+- **(A)** Migrar ahora, en un commit preparatorio antes de Fase 4. El cambio
+  es mecánico: mover el archivo y renombrar `middleware` → `proxy` en el
+  export. Después correr `npm run build` + smoke test de dev. Deja a Fase 4
+  trabajando sobre un archivo ya migrado.
+- **(B)** Migrar como parte de Fase 4, en el mismo commit que agrega CSP
+  nonce / CORS hard-fail. Mezcla chore mecánico con hardening de seguridad
+  — contra rule #2 (un fix = un commit).
+- **(C)** Posponer hasta que la deprecación tenga fecha de EOL anunciada.
+  Riesgo: AGENTS.md dice explícitamente "Heed deprecation notices".
+  Trabajar sobre archivo deprecado contradice esa regla del repo.
+
+**Aplicada: opción (A)** — ver en git log el commit
+`chore: rename middleware.ts → proxy.ts por deprecación en Next 16`.
+Cumple con AGENTS.md, evita que Fase 4 mezcle scopes, y cuesta un commit
+trivial. Se hizo a mano (no con el codemod `@next/codemod@canary`): el
+cambio son ~2 líneas, hacerlo a mano es más predecible que correr un
+codemod canary sobre el repo entero.
+
 ### API routes
 
 _(pendiente — se llenará en fases siguientes)_
