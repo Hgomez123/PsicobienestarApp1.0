@@ -72,3 +72,12 @@ _(pendiente — se llenará en fases siguientes)_
 ### Frontend
 
 _(pendiente — se llenará en fases siguientes)_
+
+### Estado del plan de hardening
+
+- **Fase 1 — SQL + Supabase**: código listo en rama. Pendiente de aplicación manual en Supabase + smoke test en producción.
+- **Fase 2 — Rate limiting con Upstash**: preparada en paralelo (`lib/security/rateLimit.new.ts`). Pendiente: crear cuenta Upstash + env vars, aplicar `await` en 12 call sites, cambiar `lenient` → `medium` en `/api/checkin`, reemplazar `rateLimit.ts` actual.
+- **Fase 3 — CSP por entorno con nonce**: pendiente. Trabajo sobre `proxy.ts` (ex-`middleware.ts`). Fix archivo `lib/security/03_middleware.ts` del plan original renombrado a `03_proxy.ts` en el espíritu.
+- **Fase 4 — Quitar `getPublicUrl` de `db.ts` (fix C5)**: pendiente. Archivo `lib/supabase/db.ts`.
+- **Fase 5 — Helper API centralizado + refactor de 10 rutas**: pendiente. Crea `lib/security/apiHelper.ts` y refactoriza cada `route.ts` siguiendo el patrón propuesto.
+- **Fase 6 — Verificación end-to-end**: pendiente. Corre después de las fases 1-5 aplicadas.
