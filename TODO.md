@@ -10,6 +10,12 @@ Observaciones y pendientes detectados durante la auditoría de seguridad. Se van
 
 - La policy de storage depende de que quien llame a `createResource` guarde `path` (no `url`) en el campo `file_path`. Si alguna vez se guarda la URL ahí por error, la policy falla en silencio para esa fila. Tema de testing, no de schema.
 
+### Storage — optimización de resource-url/upload-resource
+
+- `ensureBucket()` se llama en cada request y hace `listBuckets` + `createBucket?`.
+  Mover a cache de módulo (una sola verificación por cold start). Una vez
+  aplicado, revisar si el rate limit de `/api/resource-url` necesita ajuste.
+
 ### API routes
 
 _(pendiente — se llenará en fases siguientes)_
