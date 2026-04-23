@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Middleware de seguridad global.
+ * Proxy de seguridad global.
  * - Agrega headers HTTP de seguridad en todas las respuestas.
  * - Bloquea peticiones a rutas API que vengan de orígenes no permitidos.
+ *
+ * Nota: en Next 16 la convención `middleware` fue renombrada a `proxy`.
+ * API y semántica idénticas (mismo NextRequest/NextResponse y mismo matcher).
  */
 
 const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const res = NextResponse.next();
 
