@@ -1,6 +1,10 @@
 -- ============================================================
---  PSICOBIENESTAR · Esquema de base de datos
+--  PSICOBIENESTAR · Esquema de base de datos (consolidado)
 --  Ejecutar en: Supabase → SQL Editor → New Query
+--
+--  Este archivo refleja el ESTADO FINAL del schema, incluyendo
+--  los fixes de seguridad aplicados en lib/supabase/migrations/.
+--  Ver nota al final sobre versionado de migraciones.
 -- ============================================================
 
 -- Extensiones
@@ -19,17 +23,19 @@ create table if not exists public.profiles (
 
 -- Pacientes (administrados por la doctora)
 create table if not exists public.patients (
-  id         uuid        default uuid_generate_v4() primary key,
-  doctor_id  uuid        not null references public.profiles(id) on delete cascade,
-  user_id    uuid        references public.profiles(id) on delete set null,
-  name       text        not null,
-  age        integer,
-  email      text,
-  phone      text,
-  modality   text        not null default 'Virtual'  check (modality  in ('Virtual','Presencial','Ambas')),
-  status     text        not null default 'Activa'   check (status    in ('Activa','Pendiente','Inactiva')),
-  process    text,
-  created_at timestamptz not null default now()
+  id               uuid        default uuid_generate_v4() primary key,
+  doctor_id        uuid        not null references public.profiles(id) on delete cascade,
+  user_id          uuid        references public.profiles(id) on delete set null,
+  name             text        not null,
+  age              integer,
+  email            text,
+  phone            text,
+  modality         text        not null default 'Virtual'  check (modality  in ('Virtual','Presencial','Ambas')),
+  status           text        not null default 'Activa'   check (status    in ('Activa','Pendiente','Inactiva')),
+  process          text,
+  checkin_options  text[]      not null default '{}'::text[],
+  drive_link       text,
+  created_at       timestamptz not null default now()
 );
 
 -- Citas
@@ -54,6 +60,16 @@ create table if not exists public.goals (
   done       boolean     not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+-- Tareas (asignadas por la doctora al paciente)
+create table if not exists public.tasks (
+  id         uuid        default uuid_generate_v4() primary key,
+  patient_id uuid        not null references public.patients(id) on delete cascade,
+  doctor_id  uuid        not null references public.profiles(id),
+  text       text        not null,
+  done       boolean     not null default false,
+  created_at timestamptz not null default now()
 );
 
 -- Notas clínicas (privadas, solo la doctora)
@@ -125,7 +141,28 @@ create table if not exists public.appointment_requests (
   created_at          timestamptz not null default now()
 );
 
+-- Audit log clínico: registra accesos a datos sensibles
+-- (notas clínicas, check-ins, perfiles de paciente). Lo escribe
+-- el servidor con service_role. La doctora puede leer sus propios
+-- accesos. Sirve para auditoría legal/ética y detección de abuso.
+create table if not exists public.audit_log (
+  id          uuid        default uuid_generate_v4() primary key,
+  actor_id    uuid        references public.profiles(id),
+  actor_role  text,
+  action      text        not null,       -- 'read_clinical_notes', 'read_checkin', ...
+  resource    text        not null,       -- 'clinical_notes', 'checkins', 'patients', ...
+  patient_id  uuid        references public.patients(id) on delete set null,
+  metadata    jsonb,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists audit_log_patient_idx on public.audit_log(patient_id, created_at desc);
+create index if not exists audit_log_actor_idx   on public.audit_log(actor_id, created_at desc);
+
 -- ── TRIGGER: crear perfil automáticamente al registrar usuario ──
+-- El rol se asigna SIEMPRE como 'patient'. La doctora se marca
+-- manualmente (ver nota al final). Esto evita escalación de
+-- privilegios vía metadata del signup.
 
 create or replace function public.handle_new_user()
 returns trigger as $$
@@ -135,11 +172,11 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)),
     new.email,
-    coalesce(new.raw_user_meta_data->>'role', 'patient')
+    'patient'
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -156,9 +193,14 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger goals_updated_at         before update on public.goals            for each row execute procedure public.set_updated_at();
-create trigger clinical_notes_updated_at before update on public.clinical_notes  for each row execute procedure public.set_updated_at();
-create trigger recommendations_updated_at before update on public.recommendations for each row execute procedure public.set_updated_at();
+drop trigger if exists goals_updated_at on public.goals;
+create trigger goals_updated_at             before update on public.goals            for each row execute procedure public.set_updated_at();
+
+drop trigger if exists clinical_notes_updated_at on public.clinical_notes;
+create trigger clinical_notes_updated_at    before update on public.clinical_notes   for each row execute procedure public.set_updated_at();
+
+drop trigger if exists recommendations_updated_at on public.recommendations;
+create trigger recommendations_updated_at   before update on public.recommendations  for each row execute procedure public.set_updated_at();
 
 -- ── ROW LEVEL SECURITY ───────────────────────────────────────
 
@@ -166,12 +208,14 @@ alter table public.profiles             enable row level security;
 alter table public.patients             enable row level security;
 alter table public.appointments         enable row level security;
 alter table public.goals                enable row level security;
+alter table public.tasks                enable row level security;
 alter table public.clinical_notes       enable row level security;
 alter table public.recommendations      enable row level security;
 alter table public.resources            enable row level security;
 alter table public.checkins             enable row level security;
 alter table public.notifications        enable row level security;
 alter table public.appointment_requests enable row level security;
+alter table public.audit_log            enable row level security;
 
 -- Helper: es doctora?
 create or replace function public.is_doctor()
@@ -192,62 +236,294 @@ returns boolean as $$
 $$ language sql security definer stable;
 
 -- ── POLÍTICAS: profiles ──
-create policy "Ver propio perfil"           on public.profiles for select using (auth.uid() = id);
-create policy "Doctora ve todos los perfiles" on public.profiles for select using (public.is_doctor());
-create policy "Actualizar propio perfil"    on public.profiles for update using (auth.uid() = id);
+-- SELECT propio + SELECT para la doctora. UPDATE del propio perfil
+-- pero WITH CHECK impide cambiar el rol (escalación). INSERT y
+-- DELETE bloqueados: solo el trigger on_auth_user_created crea
+-- profiles; el DELETE cae por CASCADE desde auth.users.
+
+drop policy if exists "Ver propio perfil" on public.profiles;
+create policy "Ver propio perfil" on public.profiles
+  for select using (auth.uid() = id);
+
+drop policy if exists "Doctora ve todos los perfiles" on public.profiles;
+create policy "Doctora ve todos los perfiles" on public.profiles
+  for select using (public.is_doctor());
+
+drop policy if exists "Actualizar propio perfil" on public.profiles;
+create policy "Actualizar propio perfil" on public.profiles
+  for update
+  using (auth.uid() = id)
+  with check (
+    auth.uid() = id
+    and role = (select role from public.profiles where id = auth.uid())
+  );
+
+drop policy if exists "Bloquear insert directo a profiles" on public.profiles;
+create policy "Bloquear insert directo a profiles" on public.profiles
+  for insert
+  with check (false);
+
+drop policy if exists "Bloquear delete directo a profiles" on public.profiles;
+create policy "Bloquear delete directo a profiles" on public.profiles
+  for delete
+  using (false);
 
 -- ── POLÍTICAS: patients ──
-create policy "Doctora gestiona pacientes"  on public.patients for all    using (public.is_doctor());
-create policy "Paciente ve su registro"     on public.patients for select using (user_id = auth.uid());
+-- Doctora: 4 policies granulares (SELECT/INSERT/UPDATE/DELETE)
+-- con WITH CHECK y filtro doctor_id = auth.uid() para impedir
+-- escritura cross-tenant si en el futuro hay más de una doctora.
+-- Paciente: ve solo su propio registro.
+
+drop policy if exists "Doctora lee pacientes" on public.patients;
+create policy "Doctora lee pacientes" on public.patients
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta pacientes" on public.patients;
+create policy "Doctora inserta pacientes" on public.patients
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza pacientes" on public.patients;
+create policy "Doctora actualiza pacientes" on public.patients
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina pacientes" on public.patients;
+create policy "Doctora elimina pacientes" on public.patients
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve su registro" on public.patients;
+create policy "Paciente ve su registro" on public.patients
+  for select using (user_id = auth.uid());
 
 -- ── POLÍTICAS: appointments ──
-create policy "Doctora gestiona citas"      on public.appointments for all    using (public.is_doctor());
-create policy "Paciente ve sus citas"       on public.appointments for select using (public.is_own_patient(patient_id));
+
+drop policy if exists "Doctora lee citas" on public.appointments;
+create policy "Doctora lee citas" on public.appointments
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta citas" on public.appointments;
+create policy "Doctora inserta citas" on public.appointments
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza citas" on public.appointments;
+create policy "Doctora actualiza citas" on public.appointments
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina citas" on public.appointments;
+create policy "Doctora elimina citas" on public.appointments
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus citas" on public.appointments;
+create policy "Paciente ve sus citas" on public.appointments
+  for select using (public.is_own_patient(patient_id));
 
 -- ── POLÍTICAS: goals ──
-create policy "Doctora gestiona objetivos"  on public.goals for all    using (public.is_doctor());
-create policy "Paciente ve sus objetivos"   on public.goals for select using (public.is_own_patient(patient_id));
+
+drop policy if exists "Doctora lee objetivos" on public.goals;
+create policy "Doctora lee objetivos" on public.goals
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta objetivos" on public.goals;
+create policy "Doctora inserta objetivos" on public.goals
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza objetivos" on public.goals;
+create policy "Doctora actualiza objetivos" on public.goals
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina objetivos" on public.goals;
+create policy "Doctora elimina objetivos" on public.goals
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus objetivos" on public.goals;
+create policy "Paciente ve sus objetivos" on public.goals
+  for select using (public.is_own_patient(patient_id));
+
+-- ── POLÍTICAS: tasks ──
+
+drop policy if exists "Doctora lee tareas" on public.tasks;
+create policy "Doctora lee tareas" on public.tasks
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta tareas" on public.tasks;
+create policy "Doctora inserta tareas" on public.tasks
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza tareas" on public.tasks;
+create policy "Doctora actualiza tareas" on public.tasks
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina tareas" on public.tasks;
+create policy "Doctora elimina tareas" on public.tasks
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus tareas" on public.tasks;
+create policy "Paciente ve sus tareas" on public.tasks
+  for select using (public.is_own_patient(patient_id));
 
 -- ── POLÍTICAS: clinical_notes (solo doctora) ──
-create policy "Doctora gestiona notas"      on public.clinical_notes for all using (public.is_doctor());
+
+drop policy if exists "Doctora lee notas" on public.clinical_notes;
+create policy "Doctora lee notas" on public.clinical_notes
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta notas" on public.clinical_notes;
+create policy "Doctora inserta notas" on public.clinical_notes
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza notas" on public.clinical_notes;
+create policy "Doctora actualiza notas" on public.clinical_notes
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina notas" on public.clinical_notes;
+create policy "Doctora elimina notas" on public.clinical_notes
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
 
 -- ── POLÍTICAS: recommendations ──
-create policy "Doctora gestiona recomendaciones" on public.recommendations for all    using (public.is_doctor());
-create policy "Paciente ve sus recomendaciones"  on public.recommendations for select using (public.is_own_patient(patient_id) and active = true);
+
+drop policy if exists "Doctora lee recomendaciones" on public.recommendations;
+create policy "Doctora lee recomendaciones" on public.recommendations
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta recomendaciones" on public.recommendations;
+create policy "Doctora inserta recomendaciones" on public.recommendations
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza recomendaciones" on public.recommendations;
+create policy "Doctora actualiza recomendaciones" on public.recommendations
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina recomendaciones" on public.recommendations;
+create policy "Doctora elimina recomendaciones" on public.recommendations
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus recomendaciones" on public.recommendations;
+create policy "Paciente ve sus recomendaciones" on public.recommendations
+  for select using (public.is_own_patient(patient_id) and active = true);
 
 -- ── POLÍTICAS: resources ──
-create policy "Doctora gestiona recursos"   on public.resources for all    using (public.is_doctor());
-create policy "Paciente ve sus recursos"    on public.resources for select using (public.is_own_patient(patient_id) and active = true);
+
+drop policy if exists "Doctora lee recursos" on public.resources;
+create policy "Doctora lee recursos" on public.resources
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora inserta recursos" on public.resources;
+create policy "Doctora inserta recursos" on public.resources
+  for insert with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza recursos" on public.resources;
+create policy "Doctora actualiza recursos" on public.resources
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina recursos" on public.resources;
+create policy "Doctora elimina recursos" on public.resources
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Paciente ve sus recursos" on public.resources;
+create policy "Paciente ve sus recursos" on public.resources
+  for select using (public.is_own_patient(patient_id) and active = true);
 
 -- ── POLÍTICAS: checkins ──
-create policy "Paciente crea check-in"      on public.checkins for insert with check (public.is_own_patient(patient_id));
-create policy "Paciente ve sus checkins"    on public.checkins for select using (public.is_own_patient(patient_id));
-create policy "Doctora lee checkins"        on public.checkins for select using (public.is_doctor());
-create policy "Doctora marca leído"         on public.checkins for update using (public.is_doctor());
+
+drop policy if exists "Paciente crea check-in" on public.checkins;
+create policy "Paciente crea check-in" on public.checkins
+  for insert with check (public.is_own_patient(patient_id));
+
+drop policy if exists "Paciente ve sus checkins" on public.checkins;
+create policy "Paciente ve sus checkins" on public.checkins
+  for select using (public.is_own_patient(patient_id));
+
+drop policy if exists "Doctora lee checkins" on public.checkins;
+create policy "Doctora lee checkins" on public.checkins
+  for select using (public.is_doctor());
+
+drop policy if exists "Doctora marca leído" on public.checkins;
+create policy "Doctora marca leído" on public.checkins
+  for update
+  using (public.is_doctor())
+  with check (public.is_doctor());
 
 -- ── POLÍTICAS: notifications ──
-create policy "Doctora gestiona notificaciones" on public.notifications for all using (doctor_id = auth.uid());
+-- INSERT lo hace el servidor con service_role (bypasea RLS),
+-- no hay policy pública de escritura.
+
+drop policy if exists "Doctora lee notificaciones" on public.notifications;
+create policy "Doctora lee notificaciones" on public.notifications
+  for select using (doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza notificaciones" on public.notifications;
+create policy "Doctora actualiza notificaciones" on public.notifications
+  for update
+  using (doctor_id = auth.uid())
+  with check (doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina notificaciones" on public.notifications;
+create policy "Doctora elimina notificaciones" on public.notifications
+  for delete using (doctor_id = auth.uid());
 
 -- ── POLÍTICAS: appointment_requests ──
-create policy "Paciente crea solicitud"     on public.appointment_requests for insert with check (public.is_own_patient(patient_id));
-create policy "Paciente ve sus solicitudes" on public.appointment_requests for select using (public.is_own_patient(patient_id));
-create policy "Doctora gestiona solicitudes" on public.appointment_requests for all   using (public.is_doctor());
+
+drop policy if exists "Paciente crea solicitud" on public.appointment_requests;
+create policy "Paciente crea solicitud" on public.appointment_requests
+  for insert with check (public.is_own_patient(patient_id));
+
+drop policy if exists "Paciente ve sus solicitudes" on public.appointment_requests;
+create policy "Paciente ve sus solicitudes" on public.appointment_requests
+  for select using (public.is_own_patient(patient_id));
+
+drop policy if exists "Doctora lee solicitudes" on public.appointment_requests;
+create policy "Doctora lee solicitudes" on public.appointment_requests
+  for select using (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora actualiza solicitudes" on public.appointment_requests;
+create policy "Doctora actualiza solicitudes" on public.appointment_requests
+  for update
+  using (public.is_doctor() and doctor_id = auth.uid())
+  with check (public.is_doctor() and doctor_id = auth.uid());
+
+drop policy if exists "Doctora elimina solicitudes" on public.appointment_requests;
+create policy "Doctora elimina solicitudes" on public.appointment_requests
+  for delete using (public.is_doctor() and doctor_id = auth.uid());
+
+-- ── POLÍTICAS: audit_log ──
+-- Solo service_role escribe. La doctora puede leer sus propios
+-- accesos registrados.
+
+drop policy if exists "Doctora lee sus logs" on public.audit_log;
+create policy "Doctora lee sus logs" on public.audit_log
+  for select using (public.is_doctor() and actor_id = auth.uid());
 
 -- ── STORAGE: bucket para archivos ───────────────────────────
--- Ejecutar también en el SQL Editor:
 insert into storage.buckets (id, name, public)
 values ('psicobienestar-files', 'psicobienestar-files', false)
 on conflict do nothing;
 
+drop policy if exists "Doctora sube archivos" on storage.objects;
 create policy "Doctora sube archivos" on storage.objects
   for insert with check (bucket_id = 'psicobienestar-files' and public.is_doctor());
 
+drop policy if exists "Doctora elimina archivos" on storage.objects;
 create policy "Doctora elimina archivos" on storage.objects
   for delete using (bucket_id = 'psicobienestar-files' and public.is_doctor());
 
+drop policy if exists "Doctora lee archivos" on storage.objects;
 create policy "Doctora lee archivos" on storage.objects
   for select using (bucket_id = 'psicobienestar-files' and public.is_doctor());
 
+drop policy if exists "Paciente accede a sus archivos" on storage.objects;
 create policy "Paciente accede a sus archivos" on storage.objects
   for select using (
     bucket_id = 'psicobienestar-files'
@@ -259,7 +535,25 @@ create policy "Paciente accede a sus archivos" on storage.objects
   );
 
 -- ============================================================
---  FIN DEL SCHEMA
---  Siguiente paso: ir a Supabase → Authentication → Settings
---  y agregar tu dominio en "Site URL" y "Redirect URLs"
+--  PASO MANUAL UNA SOLA VEZ
+--  1) En Supabase → Authentication → Providers → Email:
+--     desactivar "Enable sign ups".
+--  2) Marcar manualmente a la doctora:
+--     update public.profiles set role = 'doctor'
+--      where email = 'TU-CORREO@...';
+-- ============================================================
+
+-- ============================================================
+--  VERSIONADO DE MIGRACIONES
+--
+--  Este archivo (schema.sql) es el ESTADO CONSOLIDADO de la
+--  base de datos. Para fixes incrementales que apliques a una
+--  BD en producción, NO edites este archivo directamente en
+--  primera instancia: creá una migración versionada en
+--  lib/supabase/migrations/ (p. ej. 02_xxx.sql, 03_xxx.sql...),
+--  aplicala en Supabase, y después reflejá el cambio acá para
+--  que este archivo siga siendo reproducible desde cero.
+--
+--  Fuente de verdad para el historial:  lib/supabase/migrations/
+--  Estado consolidado (recreación):     lib/supabase/schema.sql
 -- ============================================================
