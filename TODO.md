@@ -16,6 +16,15 @@ Observaciones y pendientes detectados durante la auditoría de seguridad. Se van
   Mover a cache de módulo (una sola verificación por cold start). Una vez
   aplicado, revisar si el rate limit de `/api/resource-url` necesita ajuste.
 
+### Observaciones pendientes de rateLimit (no críticas)
+
+- **Fallback en memoria sin eviction (dev-only).** `lib/security/rateLimit.new.ts`
+  usa un `Map` global (`globalThis.__rlStore`) cuando no hay Upstash. El Map crece
+  indefinidamente durante `next dev` — nunca hay eviction de entradas viejas.
+  Impacto bajo (dev-only, no corre en producción con Upstash configurado), pero
+  una corrida de carga larga podría consumir RAM. Fix futuro: eviction por TTL
+  o tamaño máximo (LRU liviano).
+
 ### API routes
 
 _(pendiente — se llenará en fases siguientes)_
