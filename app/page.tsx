@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import Header from "@/components/Header";
 
 /* ─── Datos ───────────────────────────────────────────────── */
 
@@ -185,84 +186,11 @@ export default function Home() {
       {/* ══════════════════════════════════════
           HEADER
       ══════════════════════════════════════ */}
-      <header
-        className={`sticky top-0 z-50 transition-all duration-500 ${
-          scrolled ? "px-4 pt-2 pb-2 lg:px-8" : ""
-        }`}
-      >
-        <div
-          className={`mx-auto flex items-center gap-6 transition-all duration-500 ${
-            scrolled
-              ? "rounded-[20px] border border-slate-200/80 bg-white/90 px-5 py-3 shadow-[0_8px_40px_rgba(30,90,133,0.10)] backdrop-blur-2xl"
-              : "max-w-7xl border-b border-slate-100 bg-white px-6 py-4 lg:px-8"
-          }`}
-        >
-          {/* Logo + tagline */}
-          <a href="#inicio" aria-label="Inicio" className="group shrink-0 flex items-center gap-3">
-            <Image
-              src="/logosinfondo.png"
-              alt="Psicobienestar"
-              width={148}
-              height={46}
-              className="logo-img h-9 w-auto object-contain transition-all duration-300 group-hover:scale-[1.03]"
-              priority
-            />
-            <span className="hidden xl:block text-[11px] font-medium text-[#6F98BE] leading-tight border-l border-slate-200 pl-3">
-              Psicología Clínica<br />Profesional · Guatemala
-            </span>
-          </a>
-
-          {/* Nav centrada */}
-          <nav
-            className="hidden flex-1 items-center justify-center gap-1 text-[13.5px] font-medium text-slate-500 md:flex"
-            aria-label="Navegación principal"
-          >
-            {navLinks.map(({ label, href }) => (
-              <a
-                key={label}
-                href={href}
-                className="rounded-xl px-4 py-2 transition-all duration-200 hover:bg-slate-50 hover:text-[#1E5A85]"
-              >
-                {label}
-              </a>
-            ))}
-          </nav>
-
-          {/* Acciones */}
-          <div className="hidden items-center gap-2.5 md:flex shrink-0">
-            <a
-              href="/login"
-              className="rounded-full border border-slate-200 px-4 py-2 text-[13px] font-medium text-slate-600 transition-all duration-200 hover:border-[#1E5A85] hover:text-[#1E5A85]"
-            >
-              Portal paciente
-            </a>
-            <a
-              href="#contacto"
-              className="btn-shimmer rounded-full px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_4px_18px_rgba(30,90,133,0.30)] transition-all duration-200 hover:scale-[1.04]"
-              style={{ background: "linear-gradient(135deg, #1E5A85 0%, #2d7aaa 100%)" }}
-            >
-              Agendar cita
-            </a>
-          </div>
-
-          {/* Hamburguesa móvil */}
-          <div className="ml-auto md:hidden">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(v => !v)}
-              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-              aria-expanded={menuOpen}
-              className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-[#1E5A85]/40 hover:text-[#1E5A85] ${menuOpen ? "ham-open" : ""}`}
-            >
-              <span className="flex flex-col gap-[5px]">
-                <span className="ham-line ham-line-1" />
-                <span className="ham-line ham-line-2" />
-                <span className="ham-line ham-line-3" />
-              </span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header
+        navLinks={navLinks}
+        menuOpen={menuOpen}
+        onOpenMenu={() => setMenuOpen(v => !v)}
+      />
 
       {/* ── Botón volver al inicio (móvil, aparece al hacer scroll) ── */}
       {scrolled && (
