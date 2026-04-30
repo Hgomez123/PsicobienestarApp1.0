@@ -6,8 +6,6 @@ Observaciones y pendientes detectados durante la auditoría de seguridad. Se van
 
 - La comparación `r.file_path = name` en la policy `"Paciente accede a sus archivos"` (`lib/supabase/schema.sql`) **sí funciona** con las rutas `patients/{id}/{timestamp}.{ext}`: tanto `app/api/upload-resource/route.ts:101` como `lib/supabase/db.ts:272` generan exactamente ese formato, y `storage.objects.name` guarda esa misma key interna del bucket. No hay inconsistencia real en la comparación.
 
-- `lib/supabase/db.ts:270-285` (`uploadFile`) llama `getPublicUrl` sobre un bucket **privado** — la URL devuelta nunca va a resolver. El flujo en producción usa `/api/upload-resource` + `/api/resource-url` (URL firmada), por lo que `uploadFile` de `db.ts` huele a código muerto o legacy. **Planeado para eliminar en Fase 5 (fix C5) como parte del cleanup de `lib/supabase/db.ts`** — no duplicar trabajo acá.
-
 - La policy de storage depende de que quien llame a `createResource` guarde `path` (no `url`) en el campo `file_path`. Si alguna vez se guarda la URL ahí por error, la policy falla en silencio para esa fila. Tema de testing, no de schema.
 
 ### Storage — optimización de resource-url/upload-resource
@@ -78,6 +76,6 @@ _(pendiente — se llenará en fases siguientes)_
 - **Fase 1 — SQL + Supabase**: código listo en rama. Pendiente de aplicación manual en Supabase + smoke test en producción.
 - **Fase 2 — Rate limiting con Upstash**: preparada en paralelo (`lib/security/rateLimit.new.ts`). Pendiente: crear cuenta Upstash + env vars, aplicar `await` en 12 call sites, cambiar `lenient` → `medium` en `/api/checkin`, reemplazar `rateLimit.ts` actual.
 - **Fase 3 — CSP por entorno con nonce**: pendiente. Trabajo sobre `proxy.ts` (ex-`middleware.ts`). Fix archivo `lib/security/03_middleware.ts` del plan original renombrado a `03_proxy.ts` en el espíritu.
-- **Fase 4 — Quitar `getPublicUrl` de `db.ts` (fix C5)**: pendiente. Archivo `lib/supabase/db.ts`.
+- **Fase 4 — Quitar `getPublicUrl` de `db.ts` (fix C5)**: ✅ cerrada el 29/04/2026 (commit `8ae05f4`). Se eliminó `uploadFile` por ser código muerto, no se reemplazó por `createSignedUrl` porque el flujo real ya usa `getSignedUrl` vía `/api/resource-url`.
 - **Fase 5 — Helper API centralizado + refactor de 10 rutas**: pendiente. Crea `lib/security/apiHelper.ts` y refactoriza cada `route.ts` siguiendo el patrón propuesto.
 - **Fase 6 — Verificación end-to-end**: pendiente. Corre después de las fases 1-5 aplicadas.

@@ -45,7 +45,7 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 | 1 | SQL/RLS hardening                             | ✅ Aplicada y verificada (28/04/2026) |
 | 2 | Rate limiting con Upstash                     | 🟡 Preparada en `security-hardening`, pendiente setup Upstash + migrar 12 call sites |
 | 3 | CSP con nonce sobre `proxy.ts`                | ⏳ Pendiente                         |
-| 4 | Quitar `getPublicUrl` de `db.ts`              | ⏳ Pendiente                         |
+| 4 | Quitar `getPublicUrl` de `db.ts`              | ✅ Cerrada (29/04/2026) — `uploadFile` eliminada por código muerto |
 | 5 | Helper API centralizado + refactor 10 rutas   | ⏳ Pendiente                         |
 | 6 | Verificación end-to-end                       | ⏳ Pendiente                         |
 
@@ -91,22 +91,18 @@ main:                ... afeb8cc ── 486ae73 (header redesign)
 
 ## Próximos pasos (orden sugerido)
 
-### Antes de retomar Fase 4
+### Pre-trabajo + Fase 4 — cerrados (29/04/2026)
 
-1. Reconciliar `security-hardening` con `main` (merge `main` → `security-hardening`)
-2. Agregar `e2e/.auth/` al `.gitignore`
-3. Aclarar estado real de `typescript.ignoreBuildErrors: true` en `next.config.ts`
-
-### Fase 4 (objetivo principal)
-
-4. Quitar `getPublicUrl` de `db.ts` (línea 282) — usar `getSignedUrl` en su lugar
-5. Auditar todas las llamadas a storage del bucket privado
+- ✅ Merge `main` → `security-hardening` (commit `d8450bc`)
+- ✅ `e2e/.auth/` al `.gitignore` (commit `aa2aca3`)
+- ✅ `typescript.ignoreBuildErrors` removido de `next.config.ts` (commit `dca5794`) — TS pasa limpio sin la flag
+- ✅ Fase 4: eliminada `uploadFile` de `lib/supabase/db.ts` (commit `8ae05f4`). Era código muerto: única llamada en el repo era la definición misma. El flujo real ya usaba `/api/upload-resource` + `/api/resource-url` con `createSignedUrl`.
 
 ### Después
 
-6. Investigar advertencia "Needs Attention" de `SUPABASE_SERVICE_ROLE_KEY`
-7. Vercel Toolbar en producción (actualmente "Predeterminado activado")
-8. Decisión final del dominio propio con la doctora (`psicobienestar.com.gt`
+1. Investigar advertencia "Needs Attention" de `SUPABASE_SERVICE_ROLE_KEY`
+2. Vercel Toolbar en producción (actualmente "Predeterminado activado")
+3. Decisión final del dominio propio con la doctora (`psicobienestar.com.gt`
    y `psicobienestar.gt` están disponibles, ~Q250-600/año)
 
 ### Fase 2 (rate limiting con Upstash)
