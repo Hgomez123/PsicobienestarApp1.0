@@ -2,9 +2,6 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-typescript: {
-    ignoreBuildErrors: true,  // ← agregar esto
-  },
   turbopack: {
     root: path.join(__dirname),
   },
@@ -46,3 +43,4 @@ typescript: {
 };
 
 export default nextConfig;
+
