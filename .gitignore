@@ -42,3 +42,9 @@ next-env.d.ts
 
 # archivos locales/temporales (no versionar)
 /tmp/
+
+# tests end-to-end (sesiones autenticadas, artefactos, reportes)
+/e2e/.auth/
+/test-results/
+/playwright-report/
+/playwright/.cache/
