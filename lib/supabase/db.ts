@@ -267,23 +267,6 @@ export async function deleteResource(id: string) {
 
 // ── FILE UPLOAD ──────────────────────────────────────────────
 
-export async function uploadFile(file: File, patientId: string) {
-  const ext  = file.name.split(".").pop();
-  const path = `patients/${patientId}/${Date.now()}.${ext}`;
-
-  const { error } = await supabaseDoctor.storage
-    .from("psicobienestar-files")
-    .upload(path, file);
-
-  if (error) return { url: null, path: null, error };
-
-  const { data } = supabaseDoctor.storage
-    .from("psicobienestar-files")
-    .getPublicUrl(path);
-
-  return { url: data.publicUrl, path, error: null };
-}
-
 export async function deleteFile(filePath: string) {
   return supabaseDoctor.storage
     .from("psicobienestar-files")
