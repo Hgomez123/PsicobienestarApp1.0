@@ -5,7 +5,7 @@
 > Si algo en este archivo contradice la memoria de Claude o las
 > notas de cualquier asistente, **este archivo gana**.
 
-Última actualización: 2026-04-28
+Última actualización: 2026-05-01
 
 ---
 
@@ -44,7 +44,7 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 |---|-----------------------------------------------|-------------------------------------|
 | 1   | SQL/RLS hardening                                                    | ✅ Aplicada y verificada (28/04/2026) |
 | 4   | Quitar `getPublicUrl` de `db.ts`                                     | ✅ Cerrada (29/04/2026) — `uploadFile` eliminada por código muerto |
-| 4.6 | Fix DELETE /api/patients (ownership check)                           | ⏳ Pendiente — siguiente, bug real detectado en auditoría 29/04/2026 |
+| 4.6 | Fix DELETE /api/patients (ownership check)                           | ✅ Cerrada (01/05/2026) — commit `7d8e894`, ownership check antes de `deleteUser` |
 | 5   | Helper API centralizado + refactor 11 rutas                          | ⏳ Pendiente |
 | 5.1 | Decisiones derivadas de auditoría (XSS notifications, política MIME) | ⏳ Pendiente — durante Fase 5 |
 | 4.5 | Sesión segura (logout por inactividad)                               | ⏳ Pendiente — planeada después de Fase 5 |
