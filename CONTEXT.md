@@ -46,6 +46,7 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 | 2 | Rate limiting con Upstash                     | 🟡 Preparada en `security-hardening`, pendiente setup Upstash + migrar 12 call sites |
 | 3 | CSP con nonce sobre `proxy.ts`                | ⏳ Pendiente                         |
 | 4 | Quitar `getPublicUrl` de `db.ts`              | ✅ Cerrada (29/04/2026) — `uploadFile` eliminada por código muerto |
+| 4.5 | Sesión segura (logout por inactividad)      | ⏳ Pendiente — planeada después de Fase 5 |
 | 5 | Helper API centralizado + refactor 10 rutas   | ⏳ Pendiente                         |
 | 6 | Verificación end-to-end                       | ⏳ Pendiente                         |
 
