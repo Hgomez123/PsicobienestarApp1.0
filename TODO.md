@@ -65,7 +65,12 @@ codemod canary sobre el repo entero.
 
 ### API routes
 
-_(pendiente — se llenará en fases siguientes)_
+Hallazgos de la auditoría exploratoria del 29/04/2026 (11 endpoints en 10 archivos):
+
+- **Patrones a centralizar en helper de Fase 5**: `getAdmin()` duplicado en 10 archivos, `extractToken + verifyPatient/Doctor` en 11/11, bloque de rate limit en 11/11, regex UUID en 9, `req.json()` con cast manual en 6, ownership check en 9, `ensureBucket()` duplicado, constante `BUCKET` duplicada, mensajes de error inconsistentes ("No autorizado." vs "Demasiadas solicitudes.").
+- **Inconsistencias menores**: payload de éxito sin contrato uniforme (`{ data }`, `{ success: true }`, etc.), `console.error` solo en 5 endpoints, `Retry-After` con/sin fallback `?? 60`, `clinical-notes POST` único con 201.
+- **Hueco real**: `DELETE /api/patients` (ver Fase 4.6).
+- **Huecos menores para Fase 5.1**: XSS potencial en `notifications`, MIME client-controlable, status codes inconsistentes, errores ignorados silenciosamente en `available-slots`.
 
 ### Frontend
 
@@ -73,10 +78,12 @@ _(pendiente — se llenará en fases siguientes)_
 
 ### Estado del plan de hardening
 
-- **Fase 1 — SQL + Supabase**: código listo en rama. Pendiente de aplicación manual en Supabase + smoke test en producción.
-- **Fase 2 — Rate limiting con Upstash**: preparada en paralelo (`lib/security/rateLimit.new.ts`). Pendiente: crear cuenta Upstash + env vars, aplicar `await` en 12 call sites, cambiar `lenient` → `medium` en `/api/checkin`, reemplazar `rateLimit.ts` actual.
-- **Fase 3 — CSP por entorno con nonce**: pendiente. Trabajo sobre `proxy.ts` (ex-`middleware.ts`). Fix archivo `lib/security/03_middleware.ts` del plan original renombrado a `03_proxy.ts` en el espíritu.
+- **Fase 1 — SQL + Supabase**: ✅ aplicada y verificada el 28/04/2026 en Supabase. Migraciones consolidadas en `lib/supabase/migrations/`, schema final en `lib/supabase/schema.sql`.
 - **Fase 4 — Quitar `getPublicUrl` de `db.ts` (fix C5)**: ✅ cerrada el 29/04/2026 (commit `8ae05f4`). Se eliminó `uploadFile` por ser código muerto, no se reemplazó por `createSignedUrl` porque el flujo real ya usa `getSignedUrl` vía `/api/resource-url`.
+- **Fase 4.6 — Fix DELETE /api/patients (ownership)**: pendiente, siguiente en cola. Bug real detectado en auditoría exploratoria del 29/04/2026: el endpoint autentica a la doctora pero permite borrar cualquier `userId` sin verificar que sea un paciente vinculado a ella. Plan: antes de `auth.admin.deleteUser`, hacer `SELECT id FROM patients WHERE user_id = $userId AND doctor_id = $verifiedDoctorId`. Si no hay match, 403. Mitigante actual: solo hay una doctora real, pero la lógica del endpoint no impone esa restricción y rompe en el momento que haya más de una.
+- **Fase 5 — Helper API centralizado + refactor de 11 rutas**: pendiente. Crea `lib/security/apiHelper.ts` con patrón unificado: `requireAuth` → `rateLimit` → `parseBody (Zod)` → `ownership` → handler. Refactor de las 11 rutas para usar el helper. Política unificada de errores (log server-side, mensaje genérico al cliente — corrige los 4 endpoints que filtran `error.message` crudo de Supabase: `checkin-options`, `checkin`, `resource-url`, `upload-resource`). También corrige orden invertido en `POST /api/patients` (hoy valida antes de autenticar). Centraliza `getAdmin()` (duplicado en 10 archivos), constante `BUCKET`, y `ensureBucket()` con cache de módulo (resuelve TODO previo). Estandariza shape de respuesta `{ ok, data?, error? }`. Cataloga mensajes de error en una constante.
+- **Fase 5.1 — Decisiones derivadas de auditoría**: pendiente, durante Fase 5. (1) Verificar cómo renderiza la UI de la doctora el campo `content` de `notifications` (riesgo de XSS si usa `dangerouslySetInnerHTML`). Si hay riesgo, cambiar a render como texto plano y/o guardar data estructurada. (2) Decidir política de validación MIME en `POST /api/upload-resource`: hoy se confía en `file.type` (cliente-controlable). Opciones: aceptar como mitigado por bucket privado, o sniffear magic numbers server-side. (3) Estandarizar status codes (`POST /api/clinical-notes` devuelve 201, los demás POST devuelven 200 — decidir política). (4) Revisar `GET /api/available-slots`: ignora errores de Supabase silenciosamente y usa `getHours()` local del server (timezone-dependent).
 - **Fase 4.5 — Sesión segura (logout por inactividad)**: pendiente, planeada después de Fase 5. Política acordada: 10 min de inactividad para pacientes, 15 min para doctora, con modal de aviso a los 60 segundos previos al cierre. Implementación: (1) cambiar `localStorage` → `sessionStorage` en `lib/supabase/client.ts` para que cerrar pestaña mate la sesión, (2) componente `InactivityTimer` que escuche eventos de actividad y dispare `signOut()` al pasar el TTL, (3) reducir refresh token expiry en Supabase Dashboard como backstop server-side. Razón: portal clínico con datos sensibles; comportamiento estándar en apps de salud (HIPAA-style).
-- **Fase 5 — Helper API centralizado + refactor de 10 rutas**: pendiente. Crea `lib/security/apiHelper.ts` y refactoriza cada `route.ts` siguiendo el patrón propuesto.
-- **Fase 6 — Verificación end-to-end**: pendiente. Corre después de las fases 1-5 aplicadas.
+- **Fase 3 — CSP por entorno con nonce + CORS hard-fail**: pendiente. Trabajo sobre `proxy.ts` (ex-`middleware.ts`). Originalmente fix `lib/security/03_middleware.ts` del plan, renombrado a `03_proxy.ts` en espíritu.
+- **Fase 2 — Rate limiting con Upstash**: preparada en paralelo (`lib/security/rateLimit.new.ts`). Pendiente: crear cuenta Upstash + env vars, aplicar `await` en 12 call sites, cambiar `lenient` → `medium` en `/api/checkin`, reemplazar `rateLimit.ts` actual.
+- **Fase 6 — Verificación end-to-end**: pendiente. Corre después de las fases anteriores aplicadas.

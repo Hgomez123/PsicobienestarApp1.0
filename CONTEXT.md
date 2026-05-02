@@ -42,13 +42,15 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 
 | # | Fase                                          | Estado                              |
 |---|-----------------------------------------------|-------------------------------------|
-| 1 | SQL/RLS hardening                             | ✅ Aplicada y verificada (28/04/2026) |
-| 2 | Rate limiting con Upstash                     | 🟡 Preparada en `security-hardening`, pendiente setup Upstash + migrar 12 call sites |
-| 3 | CSP con nonce sobre `proxy.ts`                | ⏳ Pendiente                         |
-| 4 | Quitar `getPublicUrl` de `db.ts`              | ✅ Cerrada (29/04/2026) — `uploadFile` eliminada por código muerto |
-| 4.5 | Sesión segura (logout por inactividad)      | ⏳ Pendiente — planeada después de Fase 5 |
-| 5 | Helper API centralizado + refactor 10 rutas   | ⏳ Pendiente                         |
-| 6 | Verificación end-to-end                       | ⏳ Pendiente                         |
+| 1   | SQL/RLS hardening                                                    | ✅ Aplicada y verificada (28/04/2026) |
+| 4   | Quitar `getPublicUrl` de `db.ts`                                     | ✅ Cerrada (29/04/2026) — `uploadFile` eliminada por código muerto |
+| 4.6 | Fix DELETE /api/patients (ownership check)                           | ⏳ Pendiente — siguiente, bug real detectado en auditoría 29/04/2026 |
+| 5   | Helper API centralizado + refactor 11 rutas                          | ⏳ Pendiente |
+| 5.1 | Decisiones derivadas de auditoría (XSS notifications, política MIME) | ⏳ Pendiente — durante Fase 5 |
+| 4.5 | Sesión segura (logout por inactividad)                               | ⏳ Pendiente — planeada después de Fase 5 |
+| 3   | CSP por entorno con nonce + CORS hard-fail                           | ⏳ Pendiente |
+| 2   | Rate limiting con Upstash                                            | ⏳ Pendiente — código preparado, falta setup + migrar 12 call sites |
+| 6   | Verificación end-to-end                                              | ⏳ Pendiente |
 
 ### Fase 1 — verificada en Supabase el 28/04/2026
 
