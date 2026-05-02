@@ -4,7 +4,7 @@
 > implementar `lib/security/apiHelper.ts`. Cuando la implementación
 > esté completa y validada, este archivo se puede archivar o eliminar.
 
-Última actualización: 2026-05-02
+Última actualización: 2026-05-03
 
 ---
 
@@ -265,8 +265,13 @@ trata como 500 con `logError`.
 Discriminated union simple. El status HTTP viaja en la `NextResponse`,
 no en el body.
 
+Tipos consolidados en `lib/security/responses.ts` junto con los
+helpers (no archivo `types.ts` separado). Razón: los 3 tipos suman
+4 líneas y no justifican archivo propio; además, evita colisión
+nominal con `lib/supabase/types.ts`.
+
 ```ts
-// lib/security/types.ts
+// lib/security/responses.ts
 export type ApiSuccess<T> = { ok: true; data: T };
 export type ApiFailure = { ok: false; error: string };
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
@@ -277,11 +282,11 @@ contrato lo imponen los helpers `ok()` / `fail()`, no la firma.
 
 ### Helpers de construcción
 
-Archivo nuevo: `lib/security/responses.ts`.
+Archivo `lib/security/responses.ts` (mismo archivo donde viven los
+tipos).
 
 ```ts
 import { NextResponse } from "next/server";
-import type { ApiSuccess, ApiFailure } from "./types";
 
 export function ok<T>(data: T, init?: ResponseInit): NextResponse {
   return NextResponse.json<ApiSuccess<T>>({ ok: true, data }, init);
