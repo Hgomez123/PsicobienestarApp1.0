@@ -4,7 +4,7 @@
 > implementar `lib/security/apiHelper.ts`. Cuando la implementación
 > esté completa y validada, este archivo se puede archivar o eliminar.
 
-Última actualización: 2026-05-01
+Última actualización: 2026-05-02
 
 ---
 
@@ -175,21 +175,257 @@ vs hardcoded) → bloque 3, pendiente.
 
 ---
 
-## Bloques pendientes
+## Bloque 3 — Política unificada de errores
 
-3. **Política unificada de errores.** Estructura del log server-side
-   (`console.error` plano vs estructurado), catálogo de mensajes
-   constante.
-4. **Shape de respuesta `{ ok, data?, error? }`.** Tipos TypeScript,
-   helpers de construcción (`ok(data)`, `fail(error, status)`).
-5. **Integración con Zod.** Qué se valida, dónde, cómo se reportan
-   errores de validación al log server-side.
+### Logging server-side
+
+Helper interno `logError(scope, error, context?)` que escribe JSON
+estructurado a `console.error`. Vive en `lib/security/logError.ts`.
+Cero dependencias nuevas.
+
+```ts
+export function logError(
+  scope: string,
+  error: unknown,
+  context?: Record<string, unknown>
+): void {
+  console.error(JSON.stringify({
+    scope,
+    error: error instanceof Error
+      ? { message: error.message, stack: error.stack }
+      : error,
+    context,
+    timestamp: new Date().toISOString(),
+  }));
+}
+```
+
+Razón del formato JSON: Vercel logs ya parsea JSON estructurado, así
+que ganamos observabilidad gratis cuando la app crezca. Si en el futuro
+queremos Sentry / Datadog, cambiar el body del helper migra todo el
+repo en un commit.
+
+Caveat menor: JSON-en-stdout es ruidoso de leer en `next dev`. Si
+duele, se agrega después un branch `process.env.NODE_ENV === "development"`
+que use formato plano.
+
+### Catálogo de mensajes al cliente
+
+Archivo nuevo: `lib/security/errors.ts`. Centraliza todos los mensajes
+del pipeline:
+
+```ts
+export const ERRORS = {
+  UNAUTHORIZED: "No autorizado.",
+  RATE_LIMITED: "Demasiadas solicitudes.",
+  INVALID_REQUEST: "Solicitud inválida.",
+  SERVER_ERROR: "Error del servidor.",
+} as const;
+```
+
+Handlers que necesiten errores propios (ej. "Cita no disponible.",
+"Email ya registrado.") agregan sus mensajes al mismo archivo bajo
+la misma constante o una secundaria. Mantiene una sola fuente para
+todos los textos visibles al cliente.
+
+TypeScript valida las keys (`ERRORS.UNAUTORIZED` no compila).
+
+### Errores de negocio
+
+Los maneja el handler directamente con `fail(...)` (ver bloque 4).
+El pipeline **no** captura excepciones de negocio.
+
+```ts
+handler: async ({ supabase, body }) => {
+  const { error } = await supabase.from("appointments").insert(...);
+  if (error?.code === "23505") {
+    return fail("Esta cita ya está reservada.", 409);
+  }
+  if (error) {
+    logError("appointments.insert", error);
+    return fail(ERRORS.SERVER_ERROR, 500);
+  }
+  return ok(data);
+}
+```
+
+Razón: errores de negocio son parte de la lógica, no errores de
+pipeline. Mezclarlos con `throw` y captura en el helper invitaría
+a una jerarquía de excepciones que hay que mantener.
+
+El pipeline solo captura `throw` no controlado del handler — lo
+trata como 500 con `logError`.
+
+---
+
+## Bloque 4 — Shape de respuesta y helpers de construcción
+
+### Tipos
+
+Discriminated union simple. El status HTTP viaja en la `NextResponse`,
+no en el body.
+
+```ts
+// lib/security/types.ts
+export type ApiSuccess<T> = { ok: true; data: T };
+export type ApiFailure = { ok: false; error: string };
+export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
+```
+
+El handler devuelve `NextResponse` plano (sin tipar el body). El
+contrato lo imponen los helpers `ok()` / `fail()`, no la firma.
+
+### Helpers de construcción
+
+Archivo nuevo: `lib/security/responses.ts`.
+
+```ts
+import { NextResponse } from "next/server";
+import type { ApiSuccess, ApiFailure } from "./types";
+
+export function ok<T>(data: T, init?: ResponseInit): NextResponse {
+  return NextResponse.json<ApiSuccess<T>>({ ok: true, data }, init);
+}
+
+export function fail(error: string, status: number): NextResponse {
+  return NextResponse.json<ApiFailure>({ ok: false, error }, { status });
+}
+```
+
+Decisiones:
+- `ok()` acepta `init?` opcional para casos como `POST /api/clinical-notes`
+  que devuelve 201. Default 200.
+- `fail()` exige status obligatorio. No hay default oculto que invite
+  a errores devueltos con status 200.
+- Sin shortcuts (`notFound()`, `badRequest()`) por ahora. Si un patrón
+  se repite en 3+ endpoints, se agrega.
+
+### Integración con el pipeline
+
+`apiRoute` usa los mismos helpers internamente para sus errores:
+
+```ts
+if (!token) return fail(ERRORS.UNAUTHORIZED, 401);
+if (rateLimited) return fail(ERRORS.RATE_LIMITED, 429);
+// etc.
+
+try {
+  return await opts.handler(ctx);
+} catch (err) {
+  logError(`apiRoute:${req.nextUrl.pathname}`, err);
+  return fail(ERRORS.SERVER_ERROR, 500);
+}
+```
+
+Toda respuesta JSON del sistema (pipeline o handler) pasa por el
+mismo embudo. Si un handler tiene un caso raro (blob, redirect),
+puede construir `NextResponse` directo — los helpers no son
+camisa de fuerza.
+
+---
+
+## Bloque 5 — Integración con Zod
+
+### Dónde viven los schemas
+
+**Inline en cada `route.ts`**, junto al handler que los consume.
+
+```ts
+// app/api/patients/route.ts
+const deletePatientSchema = z.object({
+  userId: z.string().uuid(),
+});
+
+export async function DELETE(req: NextRequest) {
+  return apiRoute(req, { ..., body: deletePatientSchema, ... });
+}
+```
+
+Razón: cada schema es la firma del input de **ese endpoint específico**.
+Schemas compartidos entre endpoints fragmentan en `createX` / `updateX` /
+`partialX` que terminan peor que la duplicación que pretendían evitar.
+Si en el futuro el frontend quiere consumir los schemas para validación
+client-side, ahí sí se extrae a `lib/schemas/` por dominio.
+
+### Errores Zod
+
+```ts
+// Dentro de apiRoute, paso parseBody
+const parsed = opts.body.safeParse(rawBody);
+if (!parsed.success) {
+  logError("apiRoute:parseBody", parsed.error, {
+    path: req.nextUrl.pathname,
+    issues: parsed.error.issues,
+  });
+  return fail(ERRORS.INVALID_REQUEST, 400);
+}
+```
+
+El cliente recibe **solo** `"Solicitud inválida."` con 400. Sin lista
+de campos inválidos, sin detalles de qué falló. Razón: el frontend
+propio sabe qué manda; si necesita feedback granular para mostrar
+errores por campo en un formulario, valida client-side con el mismo
+schema. El server es la última línea, no la primera.
+
+`error.issues` (el array detallado de Zod con `{ path, message, code }`
+por campo) sí va al `logError` para debugging server-side.
+
+### Query y path params
+
+`apiRoute` extiende su firma para validar también query y path params,
+no solo body. Tres schemas opcionales:
+
+```ts
+interface ApiRouteOptions<TBody, TQuery, TParams, TUser> {
+  auth: AuthRole;
+  rateLimit: RateLimitProfile;
+  body?: ZodSchema<TBody>;
+  query?: ZodSchema<TQuery>;
+  params?: ZodSchema<TParams>;
+  ownership: OwnershipCheck<...>;
+  handler: (ctx: HandlerContext<TBody, TQuery, TParams, TUser>)
+    => Promise<NextResponse>;
+}
+```
+
+Razón: el equivalente del bug de Fase 4.6 en endpoints GET sería
+olvidarse de validar el `patientId` que viene en query. Misma clase
+de bug. La asimetría "body validado por helper, query a mano" invita
+a olvidos.
+
+**Detalle de implementación:** en App Router de Next 15+, los path
+params se acceden vía el segundo argumento del handler:
+
+```ts
+export async function DELETE(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) { ... }
+```
+
+`apiRoute` necesita aceptar ese segundo argumento opcional y pasar
+los params parseados al schema de validación. No es trivial pero es
+estándar.
+
+### Coerción y transforms
+
+- **`trim()` en strings de identidades sociales** (email, nombres):
+  default razonable. Whitespace casi siempre es error del cliente.
+- **`toLowerCase()` en emails:** sí, evita duplicados case-sensitive.
+- **`z.coerce` (string→number, etc.):** no por default. Si el frontend
+  manda tipos incorrectos, falle ruidosamente — es bug del frontend,
+  no algo que el server debe parchear silenciosamente.
+
+Esto es guía, no enforcement. Cada schema decide.
 
 ---
 
 ## Notas operativas
 
-- Este archivo se actualiza al cerrar cada bloque adicional.
-- La implementación no comienza hasta que los 5 bloques estén cerrados.
-- Cuando la implementación esté validada y refactor de las 11 rutas
-  completo (Fase 5 cerrada), este archivo se archiva o elimina.
+- Los 5 bloques de diseño están cerrados. Lista para implementación.
+- La implementación se hará en commits separados, idealmente uno por
+  pieza: `getUserClient`, `logError`, `ERRORS`, `ok`/`fail`, y
+  finalmente `apiRoute` integrando todo. Después, el refactor de las
+  11 rutas — probablemente en lotes de 2-3 rutas por commit.
+- Cuando la implementación esté validada y el refactor completo
+  (Fase 5 cerrada), este archivo se archiva o elimina.
