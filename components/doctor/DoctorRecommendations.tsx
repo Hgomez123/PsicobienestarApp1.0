@@ -89,7 +89,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
             <button key={p.id} onClick={() => onSelectPatient(p)}
               className={`w-full rounded-2xl px-4 py-3 text-left text-sm transition ${selectedPatient?.id === p.id ? "bg-[#EEF4F8] font-medium text-[#1E5A85]" : "text-slate-600 hover:bg-slate-50"}`}>
               <p className="font-medium">{p.name}</p>
-              {p.process && <p className="mt-0.5 truncate text-xs text-slate-400">{p.process}</p>}
+              {p.process && <p className="mt-0.5 truncate text-xs text-slate-500">{p.process}</p>}
             </button>
           ))}
         </div>
@@ -112,7 +112,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
           {items.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
               <p className="text-2xl">💬</p>
-              <p className="mt-3 text-sm text-slate-400">Sin recomendaciones aún.</p>
+              <p className="mt-3 text-sm text-slate-600">Sin recomendaciones aún.</p>
             </div>
           )}
 
@@ -134,7 +134,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
               </div>
               <p className="mt-3 font-semibold text-slate-900">{r.title}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">{r.content}</p>
-              <p className="mt-3 text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("es-GT", { day: "numeric", month: "long" })}</p>
+              <p className="mt-3 text-xs text-slate-500">{new Date(r.created_at).toLocaleDateString("es-GT", { day: "numeric", month: "long" })}</p>
             </div>
           ))}
 
@@ -167,7 +167,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
                 </span>
               ))}
               {checkinOptions.length === 0 && (
-                <p className="text-xs text-slate-400">Sin opciones configuradas — el portal usará las predeterminadas.</p>
+                <p className="text-xs text-slate-500">Sin opciones configuradas — el portal usará las predeterminadas.</p>
               )}
             </div>
 

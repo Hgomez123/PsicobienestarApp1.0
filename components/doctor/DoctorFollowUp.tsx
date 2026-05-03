@@ -215,12 +215,12 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
       <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#4A7DA8]">Pacientes</p>
         <div className="mt-4 space-y-2">
-          {patients.length === 0 && <p className="text-sm text-slate-400">Sin pacientes registrados.</p>}
+          {patients.length === 0 && <p className="text-sm text-slate-600">Sin pacientes registrados.</p>}
           {patients.map(p => (
             <button key={p.id} onClick={() => onSelectPatient(p)}
               className={`w-full rounded-2xl px-4 py-3 text-left text-sm transition ${selectedPatient?.id === p.id ? "bg-[#EEF4F8] font-medium text-[#1E5A85]" : "text-slate-600 hover:bg-slate-50"}`}>
               <p className="font-medium">{p.name}</p>
-              {p.process && <p className="mt-0.5 truncate text-xs text-slate-400">{p.process}</p>}
+              {p.process && <p className="mt-0.5 truncate text-xs text-slate-500">{p.process}</p>}
             </button>
           ))}
         </div>
@@ -228,7 +228,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
 
       {/* Contenido */}
       {!selectedPatient ? (
-        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-400">
+        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
           <p className="text-sm">Selecciona un paciente para ver su seguimiento.</p>
         </div>
       ) : (
@@ -256,7 +256,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
               {/* Nueva tarea */}
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
                 <p className="mb-1 text-sm font-semibold text-slate-700">Asignar tarea al paciente</p>
-                <p className="mb-3 text-xs text-slate-400">
+                <p className="mb-3 text-xs text-slate-500">
                   La nueva tarea quedará registrada en el historial y será visible de inmediato en el portal del paciente.
                 </p>
                 <textarea
@@ -305,7 +305,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                   </span>
                 </p>
                 {taskHistory.length === 0 ? (
-                  <p className="py-4 text-center text-sm text-slate-400">Sin tareas asignadas aún.</p>
+                  <p className="py-4 text-center text-sm text-slate-600">Sin tareas asignadas aún.</p>
                 ) : (
                   <div className="space-y-3">
                     {taskHistory.map((t, idx) => (
@@ -321,7 +321,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                               </p>
                             )}
                             <p className="break-words text-sm leading-6 text-slate-800 whitespace-pre-wrap">{t.text}</p>
-                            <p className="mt-2 text-xs text-slate-400">
+                            <p className="mt-2 text-xs text-slate-500">
                               {new Date(t.created_at).toLocaleDateString("es-GT", {
                                 weekday: "short", day: "numeric", month: "long", year: "numeric",
                               })}
@@ -363,7 +363,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
               </div>
 
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm space-y-3">
-                {goals.length === 0 && <p className="py-4 text-center text-sm text-slate-400">Sin objetivos aún.</p>}
+                {goals.length === 0 && <p className="py-4 text-center text-sm text-slate-600">Sin objetivos aún.</p>}
                 {goals.map(goal => (
                   <div key={goal.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3 transition hover:bg-slate-50">
                     <button aria-label="Marcar/desmarcar objetivo" onClick={() => handleToggleGoal(goal)}
@@ -380,7 +380,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                       <div className="h-full rounded-full bg-[#6F98BE] transition-all duration-500"
                         style={{ width: `${Math.round((goals.filter(g => g.done).length / goals.length) * 100)}%` }}/>
                     </div>
-                    <p className="mt-2 text-xs text-slate-400">{goals.filter(g => g.done).length} de {goals.length} completados</p>
+                    <p className="mt-2 text-xs text-slate-500">{goals.filter(g => g.done).length} de {goals.length} completados</p>
                   </div>
                 )}
               </div>
@@ -448,7 +448,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                     <div key={s.label} className="rounded-2xl border border-slate-100 bg-white p-3.5 text-center shadow-sm">
                       <p className="text-lg">{s.icon}</p>
                       <p className={`mt-1 font-bold text-slate-900 ${s.small ? "text-[13px] leading-tight" : "text-2xl"}`}>{s.value}</p>
-                      <p className="mt-0.5 text-[10px] text-slate-400">{s.label}</p>
+                      <p className="mt-0.5 text-[10px] text-slate-500">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -517,7 +517,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                                     <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
                                       {c.content}
                                       <br/>
-                                      <span className="text-slate-400">{new Date(c.created_at).toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}</span>
+                                      <span className="text-slate-500">{new Date(c.created_at).toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}</span>
                                     </div>
                                   </div>
                                 );
@@ -532,7 +532,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                   </div>
 
                   {weekCheckins.length === 0 && (
-                    <p className="mt-3 text-center text-[12px] text-slate-400">Sin check-ins esta semana.</p>
+                    <p className="mt-3 text-center text-[12px] text-slate-500">Sin check-ins esta semana.</p>
                   )}
                 </div>
 
@@ -540,7 +540,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                 {freqEntries.length > 0 && (
                   <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#4A7DA8]">Frecuencia emocional</p>
-                    <p className="mt-0.5 text-[12px] text-slate-400">Últimos {checkins.length} registros</p>
+                    <p className="mt-0.5 text-[12px] text-slate-500">Últimos {checkins.length} registros</p>
 
                     <div className="mt-4 space-y-3">
                       {freqEntries.map(([emotion, count]) => {
@@ -577,8 +577,8 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                   {checkins.length === 0 ? (
                     <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
                       <p className="text-2xl">💭</p>
-                      <p className="mt-3 text-sm text-slate-400">El paciente aún no ha enviado check-ins.</p>
-                      <p className="mt-1 text-xs text-slate-300">Aparecerán aquí cuando seleccione y envíe una emoción.</p>
+                      <p className="mt-3 text-sm text-slate-600">El paciente aún no ha enviado check-ins.</p>
+                      <p className="mt-1 text-xs text-slate-500">Aparecerán aquí cuando seleccione y envíe una emoción.</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -596,7 +596,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                               <p className="text-[11px] font-medium text-slate-500">
                                 {date.toLocaleDateString("es-GT", { weekday: "short", day: "numeric", month: "short" })}
                               </p>
-                              <p className="text-[10px] text-slate-400">
+                              <p className="text-[10px] text-slate-500">
                                 {date.toLocaleTimeString("es-GT", { hour: "2-digit", minute: "2-digit" })}
                               </p>
                             </div>
@@ -629,12 +629,12 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
 
                   {showOptsManager && (
                     <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4">
-                      <p className="text-xs text-slate-400">Define las opciones emocionales que verá {selectedPatient.name} en su portal.</p>
+                      <p className="text-xs text-slate-500">Define las opciones emocionales que verá {selectedPatient.name} en su portal.</p>
 
                       {/* Opciones actuales */}
                       <div className="flex flex-wrap gap-2">
                         {checkinOpts.length === 0 && (
-                          <p className="text-xs text-slate-400 italic">Sin opciones. Agrega al menos una abajo.</p>
+                          <p className="text-xs text-slate-500 italic">Sin opciones. Agrega al menos una abajo.</p>
                         )}
                         {checkinOpts.map((opt, idx) => {
                           const col = EMOTION_PALETTE[idx % EMOTION_PALETTE.length];
