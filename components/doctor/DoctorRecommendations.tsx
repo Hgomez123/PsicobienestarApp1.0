@@ -129,7 +129,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
                   <button onClick={() => handleToggleActive(r)} className="rounded-xl border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:bg-slate-50">
                     {r.active ? "Desactivar" : "Activar"}
                   </button>
-                  <button onClick={() => handleDelete(r.id)} className="rounded-xl border border-red-100 bg-red-50 px-3 py-1 text-xs text-red-500 hover:bg-red-100">✕</button>
+                  <button aria-label="Eliminar recomendación" onClick={() => handleDelete(r.id)} className="rounded-xl border border-red-100 bg-red-50 px-3 py-1 text-xs text-red-500 hover:bg-red-100">✕</button>
                 </div>
               </div>
               <p className="mt-3 font-semibold text-slate-900">{r.title}</p>
@@ -198,7 +198,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
           <div className="w-full max-w-lg rounded-[32px] bg-white p-8 shadow-2xl">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-900">{editingId ? "Editar recomendación" : "Nueva recomendación"}</h2>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <button aria-label="Cerrar" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">✕</button>
             </div>
 
             <div className="mt-6 space-y-4">

@@ -365,12 +365,12 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                 {goals.length === 0 && <p className="py-4 text-center text-sm text-slate-400">Sin objetivos aún.</p>}
                 {goals.map(goal => (
                   <div key={goal.id} className="flex items-start gap-3 rounded-2xl border border-slate-100 p-3 transition hover:bg-slate-50">
-                    <button onClick={() => handleToggleGoal(goal)}
+                    <button aria-label="Marcar/desmarcar objetivo" onClick={() => handleToggleGoal(goal)}
                       className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs transition ${goal.done ? "border-[#6F98BE] bg-[#6F98BE] text-white" : "border-slate-300 hover:border-[#6F98BE]"}`}>
                       {goal.done && "✓"}
                     </button>
                     <p className={`min-w-0 flex-1 break-words text-sm leading-6 ${goal.done ? "text-slate-400 line-through" : "text-slate-800"}`}>{goal.text}</p>
-                    <button onClick={() => handleDeleteGoal(goal.id)} className="mt-0.5 shrink-0 text-xs text-red-400 hover:text-red-600">✕</button>
+                    <button aria-label="Eliminar objetivo" onClick={() => handleDeleteGoal(goal.id)} className="mt-0.5 shrink-0 text-xs text-red-400 hover:text-red-600">✕</button>
                   </div>
                 ))}
                 {goals.length > 0 && (
@@ -461,7 +461,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                       <p className="mt-0.5 text-[13px] font-semibold text-slate-800">{weekLabel}</p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setWeekOffset(w => w - 1)}
+                      <button aria-label="Semana anterior" onClick={() => setWeekOffset(w => w - 1)}
                         className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                       </button>
@@ -471,7 +471,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                           Hoy
                         </button>
                       )}
-                      <button onClick={() => setWeekOffset(w => w + 1)} disabled={isCurrentWeek}
+                      <button aria-label="Semana siguiente" onClick={() => setWeekOffset(w => w + 1)} disabled={isCurrentWeek}
                         className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:bg-slate-50 disabled:opacity-30">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                       </button>
@@ -643,7 +643,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                               style={{ background: col.bg, border: `1px solid ${col.border}` }}
                             >
                               <span className="text-[12px] font-medium" style={{ color: col.text }}>{opt}</span>
-                              <button onClick={() => removeOpt(opt)}
+                              <button aria-label="Eliminar opción" onClick={() => removeOpt(opt)}
                                 className="flex h-4 w-4 items-center justify-center rounded-full text-[10px] transition hover:bg-red-100 hover:text-red-500"
                                 style={{ color: col.text + "80" }}>
                                 ✕

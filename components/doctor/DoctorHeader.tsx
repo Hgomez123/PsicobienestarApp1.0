@@ -100,6 +100,7 @@ export default function DoctorHeader({
           <button
             type="button"
             onClick={onOpenGuide}
+            aria-label="Ver guía del panel"
             title="Ver guía del panel"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] font-bold text-slate-500 transition hover:border-blue-300 hover:text-blue-600"
           >
