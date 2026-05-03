@@ -340,6 +340,7 @@ export default function DoctorPatients({
 
                     <button
                       type="button"
+                      aria-label="Cancelar edición de enlace"
                       onClick={() => {
                         setEditingDriveId(null);
                         setDriveLinkError((prev) => ({ ...prev, [p.id]: "" }));
@@ -445,6 +446,7 @@ export default function DoctorPatients({
 
                   <button
                     type="button"
+                    aria-label="Cerrar"
                     onClick={() => setShowForm(false)}
                     className="text-slate-400 transition hover:text-slate-600"
                   >

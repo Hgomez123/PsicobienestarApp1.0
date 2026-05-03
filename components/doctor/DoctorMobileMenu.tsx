@@ -54,7 +54,7 @@ export default function DoctorMobileMenu({
             <p className="text-[12px] font-bold tracking-[0.2em] text-white/40 uppercase">Psicobienestar</p>
             <p className="mt-0.5 text-[11px] text-white/30">Portal profesional</p>
           </div>
-          <button type="button" onClick={onClose}
+          <button type="button" aria-label="Cerrar menú" onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/10 hover:text-white/70">
             <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
               <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
