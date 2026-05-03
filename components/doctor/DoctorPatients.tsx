@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { supabaseDoctor } from "@/lib/supabase/client";
 import { createPatient, updatePatient, deletePatient } from "@/lib/supabase/db";
 import type { Patient, Modality, PatientStatus } from "@/lib/supabase/types";
+import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 type Props = {
   doctorId: string;
@@ -48,6 +49,8 @@ export default function DoctorPatients({
   const [portalSuccess, setPortalSuccess] = useState<string | null>(null);
 
   const [editingDriveId, setEditingDriveId] = useState<string | null>(null);
+
+  useModalA11y(showForm, () => setShowForm(false));
   const [driveLinkValues, setDriveLinkValues] = useState<Record<string, string>>({});
   const [driveLinkSaving, setDriveLinkSaving] = useState<Record<string, boolean>>({});
   const [driveLinkError, setDriveLinkError] = useState<Record<string, string>>({});
