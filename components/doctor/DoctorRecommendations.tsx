@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getRecommendations, createRecommendation, updateRecommendation, deleteRecommendation, updatePatient } from "@/lib/supabase/db";
+import { getRecommendationsAsDoctor, createRecommendation, updateRecommendation, deleteRecommendation, updatePatient } from "@/lib/supabase/db";
 import type { Patient, Recommendation, RecommendationType } from "@/lib/supabase/types";
 
 type Props = {
@@ -28,7 +28,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;
-    const { data } = await getRecommendations(selectedPatient.id);
+    const { data } = await getRecommendationsAsDoctor(selectedPatient.id);
     if (data) setItems(data);
     setCheckinOptions(selectedPatient.checkin_options ?? []);
   }, [selectedPatient]);

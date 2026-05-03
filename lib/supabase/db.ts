@@ -219,8 +219,18 @@ export async function deleteClinicalNote(id: string) {
 
 // ── RECOMMENDATIONS ──────────────────────────────────────────
 
-export async function getRecommendations(patientId: string, onlyActive = false) {
+export async function getRecommendationsAsPatient(patientId: string, onlyActive = false) {
   let q = supabase
+    .from("recommendations")
+    .select("*")
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+  if (onlyActive) q = q.eq("active", true);
+  return q;
+}
+
+export async function getRecommendationsAsDoctor(patientId: string, onlyActive = false) {
+  let q = supabaseDoctor
     .from("recommendations")
     .select("*")
     .eq("patient_id", patientId)
