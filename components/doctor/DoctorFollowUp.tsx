@@ -260,6 +260,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                   La nueva tarea quedará registrada en el historial y será visible de inmediato en el portal del paciente.
                 </p>
                 <textarea
+                  aria-label="Texto de la tarea a asignar"
                   rows={5}
                   placeholder="Describe la tarea o ejercicio que el paciente debe realizar entre sesiones..."
                   value={taskText}
@@ -350,7 +351,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
               <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
                 <p className="mb-3 text-sm font-medium text-slate-700">Objetivos terapéuticos</p>
                 <div className="flex gap-3">
-                  <input type="text" placeholder="Ej. Reducir rumiación cognitiva" value={goalText}
+                  <input aria-label="Texto del objetivo terapéutico" type="text" placeholder="Ej. Reducir rumiación cognitiva" value={goalText}
                     onChange={e => setGoalText(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") handleAddGoal(); }}
                     className={`flex-1 ${input}`}/>
@@ -656,6 +657,7 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                       {/* Agregar */}
                       <div className="flex gap-2">
                         <input
+                          aria-label="Nueva opción de check-in emocional"
                           type="text"
                           placeholder='Ej. "Me sentí ansioso/a"'
                           value={newOpt}

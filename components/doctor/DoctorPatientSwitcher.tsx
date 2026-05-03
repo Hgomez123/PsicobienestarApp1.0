@@ -63,8 +63,9 @@ export default function DoctorPatientSwitcher({
 
       <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="w-full lg:max-w-[380px]">
-          <label className="text-sm text-slate-500">Cambiar paciente</label>
+          <label htmlFor="switcher-patient" className="text-sm text-slate-500">Cambiar paciente</label>
           <select
+            id="switcher-patient"
             value={selectedPatientId}
             onChange={(e) => setSelectedPatientId(Number(e.target.value))}
             className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#BBD2E4]"

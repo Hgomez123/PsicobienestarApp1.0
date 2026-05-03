@@ -173,6 +173,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
 
             <div className="mt-4 flex gap-2">
               <input
+                aria-label="Nueva opción de check-in"
                 type="text"
                 value={newOption}
                 onChange={e => setNewOption(e.target.value)}
@@ -215,12 +216,12 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Título</label>
-                <input type="text" placeholder="Ej. Respiración consciente" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={input}/>
+                <label htmlFor="recommendation-title" className="mb-1.5 block text-sm font-medium text-slate-700">Título</label>
+                <input id="recommendation-title" type="text" placeholder="Ej. Respiración consciente" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={input}/>
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Contenido</label>
-                <textarea rows={5} placeholder="Descripción detallada del mensaje o ejercicio..." value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} className={`${input} resize-none`}/>
+                <label htmlFor="recommendation-content" className="mb-1.5 block text-sm font-medium text-slate-700">Contenido</label>
+                <textarea id="recommendation-content" rows={5} placeholder="Descripción detallada del mensaje o ejercicio..." value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} className={`${input} resize-none`}/>
               </div>
             </div>
 

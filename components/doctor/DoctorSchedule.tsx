@@ -275,29 +275,29 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
 
             <div className="mt-6 space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Fecha y hora</label>
-                <input type="datetime-local" value={form.scheduled_at}
+                <label htmlFor="appointment-scheduled-at" className="mb-1.5 block text-sm font-medium text-slate-700">Fecha y hora</label>
+                <input id="appointment-scheduled-at" type="datetime-local" value={form.scheduled_at}
                   onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))} className={input}/>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Modalidad</label>
-                  <select value={form.modality} onChange={e => setForm(f => ({ ...f, modality: e.target.value as "Virtual" | "Presencial" }))} className={input}>
+                  <label htmlFor="appointment-modality" className="mb-1.5 block text-sm font-medium text-slate-700">Modalidad</label>
+                  <select id="appointment-modality" value={form.modality} onChange={e => setForm(f => ({ ...f, modality: e.target.value as "Virtual" | "Presencial" }))} className={input}>
                     <option>Virtual</option>
                     <option>Presencial</option>
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Duración (min)</label>
-                  <input type="number" min={15} max={180} step={15} value={form.duration_minutes}
+                  <label htmlFor="appointment-duration" className="mb-1.5 block text-sm font-medium text-slate-700">Duración (min)</label>
+                  <input id="appointment-duration" type="number" min={15} max={180} step={15} value={form.duration_minutes}
                     onChange={e => setForm(f => ({ ...f, duration_minutes: parseInt(e.target.value) || 60 }))} className={input}/>
                 </div>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Estado</label>
-                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as AppointmentStatus }))} className={input}>
+                <label htmlFor="appointment-status" className="mb-1.5 block text-sm font-medium text-slate-700">Estado</label>
+                <select id="appointment-status" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as AppointmentStatus }))} className={input}>
                   <option>Pendiente</option>
                   <option>Confirmada</option>
                   <option>Completada</option>
@@ -306,8 +306,8 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Notas (opcional)</label>
-                <textarea rows={3} placeholder="Observaciones previas a la sesión..." value={form.notes}
+                <label htmlFor="appointment-notes" className="mb-1.5 block text-sm font-medium text-slate-700">Notas (opcional)</label>
+                <textarea id="appointment-notes" rows={3} placeholder="Observaciones previas a la sesión..." value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={`${input} resize-none`}/>
               </div>
             </div>
