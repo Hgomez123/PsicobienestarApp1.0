@@ -13,14 +13,14 @@ function getInitials(name: string) {
   return name.split(" ").filter(Boolean).slice(0, 2).map(n => n[0]).join("").toUpperCase();
 }
 
-const NAV_EMOJIS: Record<string, string> = {
-  Dashboard:       "🔲",
-  Pacientes:       "👥",
-  Agenda:          "📅",
-  Seguimiento:     "📈",
-  Recomendaciones: "💬",
-  Recursos:        "📁",
-  Notificaciones:  "🔔",
+const NAV_ICONS: Record<string, React.ReactNode> = {
+  Dashboard:       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+  Pacientes:       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><circle cx="19" cy="7" r="2.5"/><path d="M22 21v-1.5a2.5 2.5 0 00-2.5-2.5"/></svg>,
+  Agenda:          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  Seguimiento:     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
+  Recomendaciones: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+  Recursos:        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>,
+  Notificaciones:  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
 };
 
 export default function DoctorMobileMenu({
@@ -102,7 +102,7 @@ export default function DoctorMobileMenu({
                   color: "rgba(255,255,255,0.5)",
                 }}
               >
-                <span className="text-base">{NAV_EMOJIS[item] ?? "·"}</span>
+                <span className="flex h-4 w-4 items-center justify-center shrink-0">{NAV_ICONS[item] ?? null}</span>
                 <span className="flex-1">{item}</span>
                 {isNotif && unreadCount > 0 ? (
                   <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">

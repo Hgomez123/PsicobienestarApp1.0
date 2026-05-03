@@ -13,14 +13,14 @@ type DoctorHeaderProps = {
   onOpenMobileMenu: () => void;
 };
 
-const SECTION_META: Record<string, { label: string; icon: string; color: string }> = {
-  Dashboard:       { label: "Vista general de pacientes y jornada clínica.",     icon: "⬛", color: "#60A5FA" },
-  Pacientes:       { label: "Crea y gestiona los perfiles de tus pacientes.",     icon: "👥", color: "#34D399" },
-  Agenda:          { label: "Programa y administra sesiones terapéuticas.",        icon: "📅", color: "#38BDF8" },
-  Seguimiento:     { label: "Notas clínicas, objetivos y check-ins por paciente.", icon: "📈", color: "#FB923C" },
-  Recomendaciones: { label: "Envía mensajes, ejercicios y reflexiones.",           icon: "💬", color: "#C084FC" },
-  Recursos:        { label: "Sube y asigna materiales de apoyo terapéutico.",     icon: "📁", color: "#4ADE80" },
-  Notificaciones:  { label: "Check-ins y solicitudes de cita de tus pacientes.",  icon: "🔔", color: "#F472B6" },
+const SECTION_META: Record<string, { label: string; color: string }> = {
+  Dashboard:       { label: "Vista general de pacientes y jornada clínica.",     color: "#60A5FA" },
+  Pacientes:       { label: "Crea y gestiona los perfiles de tus pacientes.",     color: "#34D399" },
+  Agenda:          { label: "Programa y administra sesiones terapéuticas.",        color: "#38BDF8" },
+  Seguimiento:     { label: "Notas clínicas, objetivos y check-ins por paciente.", color: "#FB923C" },
+  Recomendaciones: { label: "Envía mensajes, ejercicios y reflexiones.",           color: "#C084FC" },
+  Recursos:        { label: "Sube y asigna materiales de apoyo terapéutico.",     color: "#4ADE80" },
+  Notificaciones:  { label: "Check-ins y solicitudes de cita de tus pacientes.",  color: "#F472B6" },
 };
 
 function useClock() {
