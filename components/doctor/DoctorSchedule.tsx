@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { getDoctorPatientAppointments, createAppointment, updateAppointment, deleteAppointment } from "@/lib/supabase/db";
 import { supabaseDoctor } from "@/lib/supabase/client";
 import type { Patient, Appointment, AppointmentStatus, AppointmentRequest } from "@/lib/supabase/types";
+import { buildGCalUrl } from "@/lib/utils/calendar";
 
 type Props = {
   doctorId: string;
@@ -221,6 +222,7 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
                 <AppointmentCard
                   key={a.id}
                   appt={a}
+                  patientName={selectedPatient.name}
                   confirmDelete={confirmDelete}
                   onEdit={openEdit}
                   onDelete={handleDelete}
@@ -240,6 +242,7 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
                 <AppointmentCard
                   key={a.id}
                   appt={a}
+                  patientName={selectedPatient.name}
                   confirmDelete={confirmDelete}
                   onEdit={openEdit}
                   onDelete={handleDelete}
@@ -328,9 +331,10 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
 
 /* ── Tarjeta de cita ──────────────────────────────────────── */
 function AppointmentCard({
-  appt, confirmDelete, onEdit, onDelete, onConfirmDelete, onStatusChange, STATUS_COLOR, muted = false,
+  appt, patientName, confirmDelete, onEdit, onDelete, onConfirmDelete, onStatusChange, STATUS_COLOR, muted = false,
 }: {
   appt: Appointment;
+  patientName: string;
   confirmDelete: string | null;
   onEdit: (a: Appointment) => void;
   onDelete: (id: string) => void;
@@ -373,6 +377,21 @@ function AppointmentCard({
           <button onClick={() => onEdit(appt)} className="rounded-xl border border-slate-200 px-3 py-1 text-xs text-slate-500 hover:border-[#6F98BE] hover:text-[#1E5A85] transition">
             Editar
           </button>
+          {(appt.status === "Pendiente" || appt.status === "Confirmada") && (() => {
+            const gcalUrl = buildGCalUrl(appt.scheduled_at, patientName, appt.modality, appt.duration_minutes);
+            if (!gcalUrl) return null;
+            return (
+              <a
+                href={gcalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-[#6F98BE]/30 bg-[#EEF4F8] px-3 py-1 text-xs text-[#1E5A85] hover:bg-[#6F98BE]/15 transition"
+                title="Agregar a Google Calendar"
+              >
+                📅 Calendar
+              </a>
+            );
+          })()}
           {confirmDelete === appt.id ? (
             <>
               <button onClick={() => onDelete(appt.id)} className="rounded-xl bg-red-500 px-3 py-1 text-xs text-white">Confirmar</button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { markNotificationRead } from "@/lib/supabase/db";
 import type { Notification, NotificationType, AppointmentRequest } from "@/lib/supabase/types";
+import { buildGCalUrl } from "@/lib/utils/calendar";
 
 type Props = {
   notifications: Notification[];
@@ -29,22 +30,6 @@ const STATUS_STYLE: Record<AppointmentRequest["status"], string> = {
   Aceptada:  "bg-green-50 text-green-700 border-green-200",
   Rechazada: "bg-red-50 text-red-500 border-red-200",
 };
-
-/** Genera URL para agregar la sesión a Google Calendar. */
-function buildGCalUrl(dateStr: string, patientName: string, modality: string): string {
-  const start = new Date(dateStr);
-  if (isNaN(start.getTime())) return "";
-  const end = new Date(start.getTime() + 50 * 60 * 1000); // sesión de 50 min
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const params = new URLSearchParams({
-    action:   "TEMPLATE",
-    text:     `Sesión con ${patientName}`,
-    dates:    `${fmt(start)}/${fmt(end)}`,
-    details:  `Sesión psicológica con ${patientName}. Modalidad: ${modality}.`,
-    location: modality,
-  });
-  return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}
 
 export default function DoctorNotifications({
   notifications,
