@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import {
   getSession, getPatientByUserId,
-  getRecommendations, getResources, getAppointments, getGoals,
+  getRecommendationsAsPatient, getResources, getAppointments, getGoals,
   updateGoal, createNotification,
   createAppointmentRequest, getPatientAppointmentRequests,
 } from "@/lib/supabase/db";
@@ -219,7 +219,7 @@ export default function PortalPacientePage() {
     if (!patient) return;
 
     const [{ data: recs }, { data: res }, { data: appts }, { data: gs }, { data: reqsData }] = await Promise.all([
-      getRecommendations(patient.id, true),
+      getRecommendationsAsPatient(patient.id, true),
       getResources(patient.id, true),
       getAppointments(patient.id),
       getGoals(patient.id),
