@@ -102,29 +102,43 @@ cambiarlo es una feature, no una limitación.
 
 ```ts
 type AuthRole = "doctor" | "patient";
-type RateLimitProfile = "strict" | "medium" | "lenient";
-type OwnershipCheck<TBody, TUser> =
-  | "none"
-  | ((ctx: HandlerContext<TBody, TUser>) => Promise<boolean>);
+type RateLimitProfile = "strict" | "lenient";
 
-interface ApiRouteOptions<TBody, TUser> {
+type Inferred<S> = S extends ZodTypeAny ? ZodInfer<S> : undefined;
+
+type OwnershipCheck<TBody, TQuery> =
+  | "none"
+  | ((ctx: HandlerContext<TBody, TQuery>) => Promise<boolean>);
+
+interface ApiRouteOptions<
+  BodySchema extends ZodTypeAny | undefined,
+  QuerySchema extends ZodTypeAny | undefined
+> {
   auth: AuthRole;
   rateLimit: RateLimitProfile;
-  body?: ZodSchema<TBody>;
-  ownership: OwnershipCheck<TBody, TUser>;  // OBLIGATORIO
-  handler: (ctx: HandlerContext<TBody, TUser>) => Promise<NextResponse>;
+  body?: BodySchema;
+  query?: QuerySchema;
+  ownership: OwnershipCheck<Inferred<BodySchema>, Inferred<QuerySchema>>;
+  handler: (
+    ctx: HandlerContext<Inferred<BodySchema>, Inferred<QuerySchema>>
+  ) => Promise<NextResponse>;
 }
 
-interface HandlerContext<TBody, TUser> {
-  user: TUser;                // tipo discriminado por `auth`
-  body: TBody;                // ya parseado y validado por Zod
-  supabase: SupabaseClient;   // cliente-con-token
+interface HandlerContext<TBody, TQuery> {
+  /** Id del usuario autenticado (string), no objeto rico. */
+  user: string;
+  body: TBody;
+  query: TQuery;
+  supabase: SupabaseClient;
   req: NextRequest;
 }
 
-export async function apiRoute<TBody, TUser>(
+export async function apiRoute<
+  BodySchema extends ZodTypeAny | undefined = undefined,
+  QuerySchema extends ZodTypeAny | undefined = undefined
+>(
   req: NextRequest,
-  opts: ApiRouteOptions<TBody, TUser>
+  opts: ApiRouteOptions<BodySchema, QuerySchema>
 ): Promise<NextResponse>;
 ```
 
@@ -135,10 +149,17 @@ verificación, se pasa `ownership: "none"`. Razón: olvidar el ownership
 fue exactamente el bug de Fase 4.6. Forzar la decisión explícita
 elimina esa clase de bug.
 
-**`user` se infiere del rol** vía generics discriminados:
-`auth: "doctor"` ⇒ `user: Doctor`, `auth: "patient"` ⇒ `user: Patient`.
-El handler no necesita type assertions. (Detalle de implementación,
-dejado a quien implemente.)
+**`user` es el id del usuario autenticado** (string), devuelto por
+`verifyDoctor` o `verifyPatient` según el rol. Los helpers de auth
+en este repo retornan string, no objetos `Doctor`/`Patient` ricos.
+La discriminación entre roles la da el campo `auth` de las opciones,
+no el shape de `user`.
+
+Decisión derivada del pre-chequeo del 03/05/2026: el blueprint
+originalmente asumía objetos ricos pero los helpers existentes no los
+materializan. Si en el futuro `verifyDoctor`/`verifyPatient` se
+refactoran para devolver objetos ricos, ajustar `HandlerContext.user`
+en consecuencia.
 
 ### Orden interno (fijo)
 
@@ -377,6 +398,13 @@ por campo) sí va al `logError` para debugging server-side.
 
 ### Query y path params
 
+> **Estado de implementación (03/05/2026):** se implementaron `body` y
+> `query` en `apiRoute`, **NO** `params`. Razón: a la fecha de
+> implementación el repo no tiene rutas dinámicas (`app/api/.../[id]`).
+> Cuando aparezca el primer endpoint dinámico, extender `apiRoute` con
+> `params?: ZodSchema<TParams>` siguiendo el patrón de Next 15+
+> documentado abajo.
+
 `apiRoute` extiende su firma para validar también query y path params,
 no solo body. Tres schemas opcionales:
 
@@ -427,10 +455,12 @@ Esto es guía, no enforcement. Cada schema decide.
 
 ## Notas operativas
 
-- Los 5 bloques de diseño están cerrados. Lista para implementación.
-- La implementación se hará en commits separados, idealmente uno por
-  pieza: `getUserClient`, `logError`, `ERRORS`, `ok`/`fail`, y
-  finalmente `apiRoute` integrando todo. Después, el refactor de las
-  11 rutas — probablemente en lotes de 2-3 rutas por commit.
-- Cuando la implementación esté validada y el refactor completo
-  (Fase 5 cerrada), este archivo se archiva o elimina.
+- **Implementación de helpers cerrada (03/05/2026).** Las 5 piezas
+  están en origin: `getUserClient` (4a59f55), `logError` (24f85f9),
+  `ERRORS` (0e8fdd3), `ApiResponse + ok/fail` (c10ac62), `apiRoute`
+  (99008c1). Dependencia `zod@^3.25.76` agregada en (76072bb).
+- **Pendiente: refactor de las 11 rutas** para adoptar `apiRoute`,
+  en lotes de 2-3 rutas por commit. Hasta que ese refactor termine,
+  Fase 5 sigue técnicamente abierta (ver TODO.md para granularidad).
+- Cuando el refactor esté completo y validado, este archivo se
+  archiva o elimina.
