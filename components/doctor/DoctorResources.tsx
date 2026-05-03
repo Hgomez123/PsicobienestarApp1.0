@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { getResources, createResource, updateResource, deleteResource, deleteFile } from "@/lib/supabase/db";
 import { supabaseDoctor } from "@/lib/supabase/client";
 import type { Patient, Resource, ResourceType } from "@/lib/supabase/types";
+import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 type Props = {
   doctorId: string;
@@ -24,6 +25,8 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
   const [showForm, setShowForm]   = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useModalA11y(showForm, () => setShowForm(false));
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;

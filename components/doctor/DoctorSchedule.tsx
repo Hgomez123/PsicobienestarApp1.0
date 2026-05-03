@@ -5,6 +5,7 @@ import { getDoctorPatientAppointments, createAppointment, updateAppointment, del
 import { supabaseDoctor } from "@/lib/supabase/client";
 import type { Patient, Appointment, AppointmentStatus, AppointmentRequest } from "@/lib/supabase/types";
 import { buildGCalUrl } from "@/lib/utils/calendar";
+import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 type Props = {
   doctorId: string;
@@ -39,6 +40,8 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [updatingReqId, setUpdatingReqId] = useState<string | null>(null);
   const savingRef = useRef(false);
+
+  useModalA11y(showForm, () => setShowForm(false));
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;

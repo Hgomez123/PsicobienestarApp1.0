@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getRecommendationsAsDoctor, createRecommendation, updateRecommendation, deleteRecommendation, updatePatient } from "@/lib/supabase/db";
 import type { Patient, Recommendation, RecommendationType } from "@/lib/supabase/types";
+import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 type Props = {
   doctorId: string;
@@ -25,6 +26,8 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
   const [checkinOptions, setCheckinOptions] = useState<string[]>([]);
   const [newOption, setNewOption]           = useState("");
   const [savingOptions, setSavingOptions]   = useState(false);
+
+  useModalA11y(showForm, () => setShowForm(false));
 
   const load = useCallback(async () => {
     if (!selectedPatient) return;
