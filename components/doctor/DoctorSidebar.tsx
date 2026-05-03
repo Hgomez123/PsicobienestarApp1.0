@@ -66,7 +66,7 @@ export default function DoctorSidebar({
 
   return (
     <aside
-      className="hidden lg:flex w-'[272px] shrink-0 flex-col sticky top-0 h-screen overflow-y-auto"
+      className="hidden lg:flex w-[272px] shrink-0 flex-col sticky top-0 h-screen overflow-y-auto"
       style={{ background: "linear-gradient(180deg, #0A1628 0%, #0F1E35 60%, #0E1929 100%)" }}
     >
       {/* ── Logo ────────────────────────────────────────── */}
@@ -174,7 +174,7 @@ export default function DoctorSidebar({
                 {item}
               </span>
               {isNotif && unreadCount > 0 ? (
-                <span className="flex h-4.5 w-4.5 min-w-'[18px] items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
+                <span className="flex h-4.5 w-4.5 min-w-[18px] items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               ) : active ? (
