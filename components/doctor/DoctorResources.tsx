@@ -14,7 +14,12 @@ type Props = {
 };
 
 const EMPTY = { type: "PDF" as ResourceType, title: "", description: "" };
-const TYPE_ICON: Record<ResourceType, string> = { PDF: "📄", Audio: "🎧", Lectura: "📖", Video: "🎬" };
+const TYPE_ICON: Record<ResourceType, React.ReactNode> = {
+  PDF:     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  Audio:   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3z"/><path d="M3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>,
+  Lectura: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>,
+  Video:   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>,
+};
 
 export default function DoctorResources({ doctorId, patients, selectedPatient, onSelectPatient }: Props) {
   const [items, setItems]         = useState<Resource[]>([]);
@@ -120,7 +125,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
 
           {items.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
-              <p className="text-2xl">📁</p>
+              <div className="flex justify-center text-slate-400"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg></div>
               <p className="mt-3 text-sm text-slate-600">Sin recursos aún. Sube un archivo o crea un enlace.</p>
             </div>
           )}
@@ -129,7 +134,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
             <div key={r.id} className={`rounded-[24px] border bg-white p-5 shadow-sm transition ${r.active ? "border-slate-100" : "border-dashed border-slate-200 opacity-60"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4F8] text-lg">{TYPE_ICON[r.type]}</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4F8] text-[#1E5A85]">{TYPE_ICON[r.type]}</span>
                   <div>
                     <p className="font-semibold text-slate-900">{r.title}</p>
                     <p className="mt-0.5 text-xs text-slate-500">{r.type}</p>
@@ -170,7 +175,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
                 <div className="flex gap-2">
                   {(["PDF", "Audio", "Lectura", "Video"] as ResourceType[]).map(t => (
                     <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))}
-                      className={`flex-1 rounded-2xl border py-2 text-xs font-medium transition ${form.type === t ? "border-[#6F98BE] bg-[#EEF4F8] text-[#1E5A85]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                      className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border py-2 text-xs font-medium transition ${form.type === t ? "border-[#6F98BE] bg-[#EEF4F8] text-[#1E5A85]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
                       {TYPE_ICON[t]} {t}
                     </button>
                   ))}
@@ -191,7 +196,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
                 <input id="resource-file" ref={fileRef} type="file" accept=".pdf,.mp3,.mp4,.wav,.docx,.txt" onChange={e => setFile(e.target.files?.[0] ?? null)} className="hidden"/>
                 <button type="button" onClick={() => fileRef.current?.click()}
                   className="w-full rounded-[14px] border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500 transition hover:border-[#6F98BE] hover:bg-[#EEF4F8] hover:text-[#1E5A85]">
-                  {file ? `📎 ${file.name}` : "Haz clic para seleccionar un archivo"}
+                  {file ? <span className="inline-flex items-center justify-center gap-1.5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg><span>{file.name}</span></span> : "Haz clic para seleccionar un archivo"}
                 </button>
                 {uploadProgress && <p className="mt-2 text-xs text-slate-500">{uploadProgress}</p>}
               </div>

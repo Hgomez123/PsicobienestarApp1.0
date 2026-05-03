@@ -13,7 +13,11 @@ type Props = {
 };
 
 const EMPTY = { type: "Mensaje" as RecommendationType, title: "", content: "" };
-const TYPE_ICON: Record<RecommendationType, string> = { Mensaje: "💬", Ejercicio: "🧘", Reflexión: "🌿" };
+const TYPE_ICON: Record<RecommendationType, React.ReactNode> = {
+  Mensaje:    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+  Ejercicio:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
+  Reflexión:  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 014 13c0-2 3-7 7-9 4 2 7 7 7 9a7 7 0 01-7 7z"/><path d="M11 20V8"/></svg>,
+};
 
 export default function DoctorRecommendations({ doctorId, patients, selectedPatient, onSelectPatient }: Props) {
   const [items, setItems]             = useState<Recommendation[]>([]);
@@ -114,7 +118,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
 
           {items.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
-              <p className="text-2xl">💬</p>
+              <div className="flex justify-center text-slate-400"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
               <p className="mt-3 text-sm text-slate-600">Sin recomendaciones aún.</p>
             </div>
           )}
@@ -123,7 +127,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
             <div key={r.id} className={`rounded-[24px] border bg-white p-5 shadow-sm transition ${r.active ? "border-slate-100" : "border-dashed border-slate-200 opacity-60"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{TYPE_ICON[r.type]}</span>
+                  <span className="inline-flex items-center justify-center text-[#4A7DA8]">{TYPE_ICON[r.type]}</span>
                   <span className="rounded-full bg-[#EEF4F8] px-2.5 py-1 text-xs font-medium text-[#4A7DA8]">{r.type}</span>
                   {!r.active && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-400">Inactiva</span>}
                 </div>
@@ -211,7 +215,7 @@ export default function DoctorRecommendations({ doctorId, patients, selectedPati
                 <div className="flex gap-3">
                   {(["Mensaje", "Ejercicio", "Reflexión"] as RecommendationType[]).map(t => (
                     <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))}
-                      className={`flex-1 rounded-2xl border py-2.5 text-sm font-medium transition ${form.type === t ? "border-[#6F98BE] bg-[#EEF4F8] text-[#1E5A85]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                      className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-sm font-medium transition ${form.type === t ? "border-[#6F98BE] bg-[#EEF4F8] text-[#1E5A85]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
                       {TYPE_ICON[t]} {t}
                     </button>
                   ))}
