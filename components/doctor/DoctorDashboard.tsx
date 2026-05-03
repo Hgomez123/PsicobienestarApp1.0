@@ -158,10 +158,10 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
       {/* ── Stats row ────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Total de pacientes",  value: patients.length,    sub: `${activeCount} activos`,    icon: "👥", accent: "#3B7EC8" },
-          { label: "Citas hoy",           value: todayAppts.length,  sub: todayAppts.length === 0 ? "Ninguna hoy" : `${todayAppts.filter(a=>a.status==="Confirmada").length} confirmadas`, icon: "📅", accent: "#4A9472" },
-          { label: "Solicitudes nuevas",  value: pendingRequests,    sub: pendingRequests > 0 ? "Requieren atención" : "Al día", icon: "📨", accent: pendingRequests > 0 ? "#F97316" : "#94A3B8" },
-          { label: "Check-ins recibidos", value: checkins.length,    sub: `De ${Object.keys(latestCheckinByPatient).length} pacientes`, icon: "✅", accent: "#7C72B8" },
+          { label: "Total de pacientes",  value: patients.length,    sub: `${activeCount} activos`,    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><circle cx="19" cy="7" r="2.5"/><path d="M22 21v-1.5a2.5 2.5 0 00-2.5-2.5"/></svg>, accent: "#3B7EC8" },
+          { label: "Citas hoy",           value: todayAppts.length,  sub: todayAppts.length === 0 ? "Ninguna hoy" : `${todayAppts.filter(a=>a.status==="Confirmada").length} confirmadas`, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>, accent: "#4A9472" },
+          { label: "Solicitudes nuevas",  value: pendingRequests,    sub: pendingRequests > 0 ? "Requieren atención" : "Al día", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>, accent: pendingRequests > 0 ? "#F97316" : "#94A3B8" },
+          { label: "Check-ins recibidos", value: checkins.length,    sub: `De ${Object.keys(latestCheckinByPatient).length} pacientes`, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 9"/></svg>, accent: "#7C72B8" },
         ].map(stat => (
           <div key={stat.label} className="relative overflow-hidden rounded-[24px] border border-slate-100 bg-white p-5 shadow-sm">
             <div
@@ -170,7 +170,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
             />
             <div className="flex items-center justify-between pt-1">
               <p className="text-[10.5px] font-bold uppercase tracking-widest text-slate-600">{stat.label}</p>
-              <span className="text-xl">{stat.icon}</span>
+              <span className="inline-flex items-center justify-center" style={{ color: stat.accent }}>{stat.icon}</span>
             </div>
             <p className="mt-3 text-3xl font-bold text-slate-900">{stat.value}</p>
             <p className="mt-1 text-xs text-slate-500">{stat.sub}</p>
@@ -227,7 +227,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
 
           {todayAppts.length === 0 ? (
             <div className="mt-5 rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-              <p className="text-2xl">☀️</p>
+              <div className="flex justify-center text-amber-400"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></div>
               <p className="mt-2 text-sm text-slate-600">Sin citas programadas para hoy.</p>
             </div>
           ) : (
@@ -269,7 +269,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                 {pendingRequests > 0 && (
                   <button onClick={() => onGoToSection("Notificaciones")}
                     className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left transition hover:bg-amber-50">
-                    <span className="text-base">📨</span>
+                    <span className="inline-flex items-center justify-center text-amber-600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800">{pendingRequests} solicitud{pendingRequests > 1 ? "es" : ""} de cita pendiente{pendingRequests > 1 ? "s" : ""}</p>
                       <p className="text-xs text-slate-500">Toca para revisar</p>
@@ -280,7 +280,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                 {patientsWithoutRecentCheckin.slice(0, 3).map(p => (
                   <button key={p.id} onClick={() => { onSelectPatient(p); onGoToSection("Seguimiento"); }}
                     className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left transition hover:bg-amber-50">
-                    <span className="text-base">⚠️</span>
+                    <span className="inline-flex items-center justify-center text-amber-600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate">{p.name}</p>
                       <p className="text-xs text-slate-500">Sin check-in en +7 días</p>
@@ -320,16 +320,16 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
             <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#4A7DA8]">Acceso rápido</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {[
-                { label: "Pacientes",       icon: "👥", section: "Pacientes" },
-                { label: "Agenda",          icon: "📅", section: "Agenda" },
-                { label: "Seguimiento",     icon: "📝", section: "Seguimiento" },
-                { label: "Recomendaciones", icon: "💬", section: "Recomendaciones" },
-                { label: "Recursos",        icon: "📁", section: "Recursos" },
-                { label: "Notificaciones",  icon: "🔔", section: "Notificaciones" },
+                { label: "Pacientes",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><circle cx="19" cy="7" r="2.5"/><path d="M22 21v-1.5a2.5 2.5 0 00-2.5-2.5"/></svg>, section: "Pacientes" },
+                { label: "Agenda",          icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>, section: "Agenda" },
+                { label: "Seguimiento",     icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>, section: "Seguimiento" },
+                { label: "Recomendaciones", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>, section: "Recomendaciones" },
+                { label: "Recursos",        icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>, section: "Recursos" },
+                { label: "Notificaciones",  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>, section: "Notificaciones" },
               ].map(item => (
                 <button key={item.section} onClick={() => onGoToSection(item.section)}
                   className="flex items-center gap-2 rounded-2xl border border-slate-100 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:border-[#6F98BE] hover:bg-[#EEF4F8] hover:text-[#1E5A85]">
-                  <span>{item.icon}</span>
+                  <span className="inline-flex items-center justify-center text-[#4A7DA8]">{item.icon}</span>
                   <span className="font-medium">{item.label}</span>
                 </button>
               ))}
