@@ -247,7 +247,7 @@ export default function DoctorPatients({
         {patients.length === 0 && (
           <div className="col-span-full rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
             <p className="text-3xl">👥</p>
-            <p className="mt-3 text-sm text-slate-400">Aún no hay pacientes registrados.</p>
+            <p className="mt-3 text-sm text-slate-600">Aún no hay pacientes registrados.</p>
             <button
               type="button"
               onClick={openCreate}
@@ -268,7 +268,7 @@ export default function DoctorPatients({
             <div className="flex items-start justify-between gap-3">
               <button type="button" onClick={() => onSelectPatient(p)} className="flex-1 text-left">
                 <p className="font-semibold text-slate-900">{p.name}</p>
-                {p.age && <p className="mt-0.5 text-xs text-slate-400">{p.age} años</p>}
+                {p.age && <p className="mt-0.5 text-xs text-slate-500">{p.age} años</p>}
                 {p.process && (
                   <p className="mt-2 text-sm leading-5 text-slate-600">{p.process}</p>
                 )}
@@ -281,7 +281,7 @@ export default function DoctorPatients({
               </span>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
               <span className="rounded-full bg-slate-50 px-2.5 py-1">{p.modality}</span>
               {p.email && (
                 <span className="max-w-[160px] truncate rounded-full bg-slate-50 px-2.5 py-1">
@@ -297,7 +297,7 @@ export default function DoctorPatients({
                   Portal activo
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-slate-400">
+                <span className="inline-flex items-center gap-1.5 text-slate-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
                   Sin acceso al portal
                 </span>
@@ -313,7 +313,7 @@ export default function DoctorPatients({
             <div className="mt-3 border-t border-slate-100 pt-3">
               {editingDriveId === p.id ? (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
                     Enlace de Google Drive
                   </p>
 

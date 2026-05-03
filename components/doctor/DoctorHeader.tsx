@@ -81,7 +81,7 @@ export default function DoctorHeader({
               )}
             </div>
             {meta && (
-              <p className="hidden md:block text-[11.5px] text-slate-400 mt-0.5 leading-tight truncate max-w-md">
+              <p className="hidden md:block text-[11.5px] text-slate-500 mt-0.5 leading-tight truncate max-w-md">
                 {meta.label}
               </p>
             )}
@@ -141,7 +141,7 @@ export default function DoctorHeader({
 
       {/* ── Greeting strip ───────────────────────────────────── */}
       <div className="px-5 pt-5 pb-1 lg:px-8">
-        <p className="text-[13px] text-slate-400">
+        <p className="text-[13px] text-slate-600">
           Bienvenida, <span className="font-semibold text-slate-700">{firstName}</span>
         </p>
       </div>

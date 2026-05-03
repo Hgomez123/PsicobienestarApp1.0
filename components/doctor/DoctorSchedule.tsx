@@ -152,9 +152,9 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
                       </p>
                     )}
                     {r.preferred_modality && (
-                      <p className="text-xs text-slate-400">Modalidad: {r.preferred_modality}</p>
+                      <p className="text-xs text-slate-500">Modalidad: {r.preferred_modality}</p>
                     )}
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-500">
                       {new Date(r.created_at).toLocaleDateString("es-GT", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
@@ -186,12 +186,12 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
       <div className="rounded-[28px] border border-slate-100 bg-white p-5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#4A7DA8]">Pacientes</p>
         <div className="mt-4 space-y-2">
-          {patients.length === 0 && <p className="text-sm text-slate-400">Sin pacientes.</p>}
+          {patients.length === 0 && <p className="text-sm text-slate-600">Sin pacientes.</p>}
           {patients.map(p => (
             <button key={p.id} onClick={() => onSelectPatient(p)}
               className={`w-full rounded-2xl px-4 py-3 text-left text-sm transition ${selectedPatient?.id === p.id ? "bg-[#EEF4F8] font-medium text-[#1E5A85]" : "text-slate-600 hover:bg-slate-50"}`}>
               <p className="font-medium">{p.name}</p>
-              {p.process && <p className="mt-0.5 truncate text-xs text-slate-400">{p.process}</p>}
+              {p.process && <p className="mt-0.5 truncate text-xs text-slate-500">{p.process}</p>}
             </button>
           ))}
         </div>
@@ -199,7 +199,7 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
 
       {/* Contenido */}
       {!selectedPatient ? (
-        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-400">
+        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
           <p className="text-sm">Selecciona un paciente para gestionar su agenda.</p>
         </div>
       ) : (
@@ -258,7 +258,7 @@ export default function DoctorSchedule({ doctorId, patients, selectedPatient, ap
           {items.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
               <p className="text-2xl">📅</p>
-              <p className="mt-3 text-sm text-slate-400">Sin citas registradas. Crea la primera.</p>
+              <p className="mt-3 text-sm text-slate-600">Sin citas registradas. Crea la primera.</p>
             </div>
           )}
         </div>
@@ -354,7 +354,7 @@ function AppointmentCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLOR[appt.status]}`}>{appt.status}</span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">{appt.modality}</span>
-            <span className="text-xs text-slate-400">{appt.duration_minutes} min</span>
+            <span className="text-xs text-slate-500">{appt.duration_minutes} min</span>
           </div>
           <p className={`mt-2 font-semibold capitalize ${appt.status === "Cancelada" ? "line-through text-slate-400" : "text-slate-900"}`}>{dateStr}</p>
           <p className={`mt-0.5 text-sm ${appt.status === "Cancelada" ? "line-through text-slate-400" : "text-slate-500"}`}>{timeStr}</p>

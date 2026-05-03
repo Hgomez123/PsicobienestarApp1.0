@@ -147,7 +147,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
         <svg className="animate-spin text-[#1E5A85]" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
         </svg>
-        <p className="text-sm text-slate-400">Cargando panel...</p>
+        <p className="text-sm text-slate-600">Cargando panel...</p>
       </div>
     );
   }
@@ -169,11 +169,11 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
               style={{ background: stat.accent }}
             />
             <div className="flex items-center justify-between pt-1">
-              <p className="text-[10.5px] font-bold uppercase tracking-widest text-slate-400">{stat.label}</p>
+              <p className="text-[10.5px] font-bold uppercase tracking-widest text-slate-600">{stat.label}</p>
               <span className="text-xl">{stat.icon}</span>
             </div>
             <p className="mt-3 text-3xl font-bold text-slate-900">{stat.value}</p>
-            <p className="mt-1 text-xs text-slate-400">{stat.sub}</p>
+            <p className="mt-1 text-xs text-slate-500">{stat.sub}</p>
           </div>
         ))}
       </div>
@@ -228,7 +228,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
           {todayAppts.length === 0 ? (
             <div className="mt-5 rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
               <p className="text-2xl">☀️</p>
-              <p className="mt-2 text-sm text-slate-400">Sin citas programadas para hoy.</p>
+              <p className="mt-2 text-sm text-slate-600">Sin citas programadas para hoy.</p>
             </div>
           ) : (
             <div className="mt-5 space-y-2.5">
@@ -245,7 +245,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-900 truncate">{a.patients?.name ?? "Paciente"}</p>
-                      <p className="text-xs text-slate-400">{a.modality} · {a.duration_minutes} min</p>
+                      <p className="text-xs text-slate-500">{a.modality} · {a.duration_minutes} min</p>
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
                       a.status === "Confirmada" ? "bg-green-50 text-green-700" :
@@ -272,7 +272,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                     <span className="text-base">📨</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800">{pendingRequests} solicitud{pendingRequests > 1 ? "es" : ""} de cita pendiente{pendingRequests > 1 ? "s" : ""}</p>
-                      <p className="text-xs text-slate-400">Toca para revisar</p>
+                      <p className="text-xs text-slate-500">Toca para revisar</p>
                     </div>
                     <span className="text-xs text-amber-500">→</span>
                   </button>
@@ -283,7 +283,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                     <span className="text-base">⚠️</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate">{p.name}</p>
-                      <p className="text-xs text-slate-400">Sin check-in en +7 días</p>
+                      <p className="text-xs text-slate-500">Sin check-in en +7 días</p>
                     </div>
                     <span className="text-xs text-amber-500">→</span>
                   </button>
@@ -305,9 +305,9 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                     <div key={a.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
                       <div>
                         <p className="text-sm font-medium text-slate-800">{a.patients?.name ?? "Paciente"}</p>
-                        <p className="text-xs text-slate-400">{dateStr} · {timeStr}</p>
+                        <p className="text-xs text-slate-500">{dateStr} · {timeStr}</p>
                       </div>
-                      <span className="text-xs text-slate-400">{a.modality}</span>
+                      <span className="text-xs text-slate-500">{a.modality}</span>
                     </div>
                   );
                 })}
@@ -353,7 +353,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
 
         {patients.length === 0 ? (
           <div className="mt-5 rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-            <p className="text-sm text-slate-400">Aún no hay pacientes registrados.</p>
+            <p className="text-sm text-slate-600">Aún no hay pacientes registrados.</p>
           </div>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -381,13 +381,13 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                       </p>
                       <div className="mt-2 flex items-center gap-1.5">
                         <span className={`h-1.5 w-1.5 rounded-full ${isRecent ? "bg-green-400" : isStale ? "bg-amber-400" : "bg-slate-300"}`} />
-                        <p className="text-[10.5px] text-slate-400">
+                        <p className="text-[10.5px] text-slate-500">
                           {daysSince === 0 ? "Hoy" : daysSince === 1 ? "Ayer" : `Hace ${daysSince} días`}
                         </p>
                       </div>
                     </>
                   ) : (
-                    <p className="mt-2 text-sm italic text-slate-400">Sin check-ins aún.</p>
+                    <p className="mt-2 text-sm italic text-slate-500">Sin check-ins aún.</p>
                   )}
                 </button>
               );
@@ -411,7 +411,7 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
 
         {patients.length === 0 ? (
           <div className="mt-5 rounded-[20px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-            <p className="text-sm text-slate-400">Aún no hay pacientes. Ve a Pacientes para crear el primero.</p>
+            <p className="text-sm text-slate-600">Aún no hay pacientes. Ve a Pacientes para crear el primero.</p>
           </div>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -427,13 +427,13 @@ export default function DoctorDashboard({ doctorId, patients, selectedPatient, a
                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{p.modality}</span>
                   {p.user_id
                     ? <span className="text-xs text-green-600">Portal activo</span>
-                    : <span className="text-xs text-slate-400">Sin portal</span>}
+                    : <span className="text-xs text-slate-500">Sin portal</span>}
                 </div>
               </button>
             ))}
             {patients.length > 6 && (
               <button onClick={() => onGoToSection("Pacientes")}
-                className="flex items-center justify-center rounded-[20px] border border-dashed border-slate-200 p-4 text-sm text-slate-400 transition hover:border-[#6F98BE] hover:text-[#1E5A85]">
+                className="flex items-center justify-center rounded-[20px] border border-dashed border-slate-200 p-4 text-sm text-slate-500 transition hover:border-[#6F98BE] hover:text-[#1E5A85]">
                 +{patients.length - 6} más →
               </button>
             )}

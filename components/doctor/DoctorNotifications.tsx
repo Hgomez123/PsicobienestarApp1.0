@@ -77,7 +77,7 @@ export default function DoctorNotifications({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Solicitudes de cita</h2>
-            <p className="text-sm text-slate-400">{appointmentRequests.length} solicitud{appointmentRequests.length !== 1 ? "es" : ""}{pending > 0 && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{pending} pendiente{pending !== 1 ? "s" : ""}</span>}</p>
+            <p className="text-sm text-slate-500">{appointmentRequests.length} solicitud{appointmentRequests.length !== 1 ? "es" : ""}{pending > 0 && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{pending} pendiente{pending !== 1 ? "s" : ""}</span>}</p>
           </div>
           <button
             onClick={handleRefresh}
@@ -91,8 +91,8 @@ export default function DoctorNotifications({
         {appointmentRequests.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
             <p className="text-3xl">📅</p>
-            <p className="mt-3 text-sm text-slate-400">No hay solicitudes de cita aún.</p>
-            <p className="mt-1 text-xs text-slate-300">Cuando un paciente solicite una cita, aparecerá aquí.</p>
+            <p className="mt-3 text-sm text-slate-600">No hay solicitudes de cita aún.</p>
+            <p className="mt-1 text-xs text-slate-500">Cuando un paciente solicite una cita, aparecerá aquí.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -123,12 +123,12 @@ export default function DoctorNotifications({
                           </p>
                         )}
                         {r.preferred_modality && (
-                          <p className="text-xs text-slate-400 mt-0.5">Modalidad: {r.preferred_modality}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Modalidad: {r.preferred_modality}</p>
                         )}
                         {r.message && (
                           <p className="mt-2 text-sm text-slate-600 italic">"{r.message}"</p>
                         )}
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-slate-500">
                           {new Date(r.created_at).toLocaleDateString("es-GT", {
                             day: "numeric", month: "long", year: "numeric",
                             hour: "2-digit", minute: "2-digit",
@@ -188,7 +188,7 @@ export default function DoctorNotifications({
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Notificaciones</h2>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-500">
               {notifications.length} notificacion{notifications.length !== 1 ? "es" : ""}
               {unread > 0 && (
                 <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
@@ -211,8 +211,8 @@ export default function DoctorNotifications({
         {notifications.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
             <p className="text-3xl">🔔</p>
-            <p className="mt-3 text-sm text-slate-400">No hay notificaciones aún.</p>
-            <p className="mt-1 text-xs text-slate-300">Los check-ins de tus pacientes aparecerán aquí.</p>
+            <p className="mt-3 text-sm text-slate-600">No hay notificaciones aún.</p>
+            <p className="mt-1 text-xs text-slate-500">Los check-ins de tus pacientes aparecerán aquí.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -241,7 +241,7 @@ export default function DoctorNotifications({
                         {!n.read && <span className="h-2 w-2 rounded-full bg-red-500" title="Sin leer" />}
                       </div>
                       <p className="mt-2 text-sm leading-6 text-slate-700">{n.content}</p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-500">
                         {new Date(n.created_at).toLocaleDateString("es-GT", {
                           day: "numeric", month: "long", year: "numeric",
                           hour: "2-digit", minute: "2-digit",

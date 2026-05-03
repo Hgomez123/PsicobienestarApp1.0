@@ -103,7 +103,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
 
       {/* Contenido */}
       {!selectedPatient ? (
-        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-400">
+        <div className="flex items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center text-slate-600">
           <p className="text-sm">Selecciona un paciente para gestionar sus recursos.</p>
         </div>
       ) : (
@@ -118,7 +118,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
           {items.length === 0 && (
             <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-10 text-center">
               <p className="text-2xl">📁</p>
-              <p className="mt-3 text-sm text-slate-400">Sin recursos aún. Sube un archivo o crea un enlace.</p>
+              <p className="mt-3 text-sm text-slate-600">Sin recursos aún. Sube un archivo o crea un enlace.</p>
             </div>
           )}
 
@@ -129,7 +129,7 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4F8] text-lg">{TYPE_ICON[r.type]}</span>
                   <div>
                     <p className="font-semibold text-slate-900">{r.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-400">{r.type}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{r.type}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
