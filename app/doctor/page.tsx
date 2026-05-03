@@ -16,6 +16,7 @@ import { doctorSteps, DOCTOR_STORAGE_KEY } from "@/data/onboardingSteps";
 
 import DoctorSidebar           from "@/components/doctor/DoctorSidebar";
 import DoctorHeader            from "@/components/doctor/DoctorHeader";
+import DoctorMobileMenu        from "@/components/doctor/DoctorMobileMenu";
 import DoctorDashboard         from "@/components/doctor/DoctorDashboard";
 import DoctorPatients          from "@/components/doctor/DoctorPatients";
 import DoctorSchedule          from "@/components/doctor/DoctorSchedule";
@@ -46,6 +47,7 @@ export default function DoctorPage() {
   const [navHistory, setNavHistory]         = useState<DoctorSection[]>([]);
   const [sectionKey, setSectionKey]         = useState(0);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patients, setPatients]                   = useState<Patient[]>([]);
   const [notifications, setNotifications]         = useState<Notification[]>([]);
@@ -213,6 +215,18 @@ export default function DoctorPage() {
         onClose={() => setOnboardingOpen(false)}
       />
 
+      {/* ── Mobile menu (lg:hidden) ─────────────────────── */}
+      <DoctorMobileMenu
+        open={mobileMenuOpen}
+        doctorName={doctorName}
+        navItems={[...NAV_ITEMS]}
+        activeSection={activeSection}
+        unreadCount={unreadCount}
+        onClose={() => setMobileMenuOpen(false)}
+        onSelectSection={(s) => navigateTo(s as DoctorSection)}
+        onLogout={handleLogout}
+      />
+
       <div className="flex min-h-screen">
 
         <DoctorSidebar
@@ -229,13 +243,11 @@ export default function DoctorPage() {
             activeSection={activeSection}
             doctorName={doctorName}
             unreadCount={unreadCount}
-            navItems={[...NAV_ITEMS]}
             canGoBack={navHistory.length > 0}
             onBack={handleBack}
             onGoToNotifications={() => navigateTo("Notificaciones")}
-            onSelectSection={(s) => navigateTo(s as DoctorSection)}
-            onLogout={handleLogout}
             onOpenGuide={() => setOnboardingOpen(true)}
+            onOpenMobileMenu={() => setMobileMenuOpen(true)}
           />
 
           <div key={sectionKey} className="mt-4 px-5 pb-8 sm:px-6 lg:px-8 portal-section-anim">

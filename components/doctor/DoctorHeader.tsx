@@ -6,13 +6,11 @@ type DoctorHeaderProps = {
   activeSection: string;
   doctorName: string;
   unreadCount: number;
-  navItems: string[];
   canGoBack: boolean;
   onBack: () => void;
   onGoToNotifications: () => void;
-  onSelectSection: (s: string) => void;
-  onLogout: () => void;
   onOpenGuide: () => void;
+  onOpenMobileMenu: () => void;
 };
 
 const SECTION_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -36,21 +34,13 @@ function useClock() {
   return t;
 }
 
-const NAV_EMOJIS: Record<string, string> = {
-  Dashboard: "🔲", Pacientes: "👥", Agenda: "📅", Seguimiento: "📈",
-  Recomendaciones: "💬", Recursos: "📁", Notificaciones: "🔔",
-};
-
 export default function DoctorHeader({
-  activeSection, doctorName, unreadCount, navItems,
-  canGoBack, onBack, onGoToNotifications, onSelectSection, onLogout, onOpenGuide,
+  activeSection, doctorName, unreadCount,
+  canGoBack, onBack, onGoToNotifications, onOpenGuide, onOpenMobileMenu,
 }: DoctorHeaderProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const clock    = useClock();
   const meta     = SECTION_META[activeSection];
   const firstName = doctorName.split(" ").find(w => w.length > 2) ?? doctorName.split(" ")[0];
-
-  function selectSection(s: string) { onSelectSection(s); setMobileOpen(false); }
 
   return (
     <>
@@ -135,7 +125,7 @@ export default function DoctorHeader({
 
           {/* Mobile hamburger */}
           <button
-            onClick={() => setMobileOpen(v => !v)}
+            onClick={onOpenMobileMenu}
             aria-label="Abrir menú"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-300 hover:text-blue-600 lg:hidden"
           >
@@ -154,67 +144,6 @@ export default function DoctorHeader({
           Bienvenida, <span className="font-semibold text-slate-700">{firstName}</span>
         </p>
       </div>
-
-      {/* ── Mobile menu overlay ──────────────────────────────── */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" />
-
-          <div
-            className="absolute right-0 top-0 flex h-full w-72 flex-col shadow-2xl"
-            style={{ background: "linear-gradient(180deg, #0A1628 0%, #0F1E35 100%)" }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-5">
-              <div>
-                <p className="text-[11px] font-bold tracking-[0.2em] text-white/35 uppercase">Psicobienestar</p>
-                <p className="mt-0.5 text-[12px] font-semibold text-white/80">{doctorName}</p>
-              </div>
-              <button onClick={() => setMobileOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/40 transition hover:bg-white/10 hover:text-white/70">
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                  <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* Nav */}
-            <nav className="flex-1 px-3 space-y-0.5">
-              {navItems.map(item => {
-                const active  = activeSection === item;
-                const isNotif = item === "Notificaciones";
-                return (
-                  <button key={item} onClick={() => selectSection(item)}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[13px] transition-all"
-                    style={active ? {
-                      background: "rgba(255,255,255,0.09)",
-                      color: "white",
-                      fontWeight: 600,
-                    } : { color: "rgba(255,255,255,0.5)" }}
-                  >
-                    <span className="text-base">{NAV_EMOJIS[item] ?? "·"}</span>
-                    <span className="flex-1">{item}</span>
-                    {isNotif && unreadCount > 0 && (
-                      <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                    {active && !isNotif && <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />}
-                  </button>
-                );
-              })}
-            </nav>
-
-            <div className="px-4 pb-6">
-              <button onClick={onLogout}
-                className="mt-4 w-full rounded-xl border border-white/10 py-3 text-[13px] font-medium text-white/40 transition hover:bg-white/08 hover:text-rose-400">
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
