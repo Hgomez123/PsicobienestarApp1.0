@@ -102,7 +102,7 @@ export default function DoctorHeader({
             onClick={onOpenGuide}
             aria-label="Ver guía del panel"
             title="Ver guía del panel"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] font-bold text-slate-500 transition hover:border-blue-300 hover:text-blue-600"
+            className="flex h-11 w-11 md:h-9 md:w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] font-bold text-slate-500 transition hover:border-blue-300 hover:text-blue-600"
           >
             ?
           </button>
@@ -110,7 +110,7 @@ export default function DoctorHeader({
           {/* Notifications */}
           <button
             onClick={onGoToNotifications}
-            className="relative flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+            className="relative flex h-11 md:h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-[12.5px] font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -128,7 +128,7 @@ export default function DoctorHeader({
           <button
             onClick={onOpenMobileMenu}
             aria-label="Abrir menú"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-300 hover:text-blue-600 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-blue-300 hover:text-blue-600 lg:hidden"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"/>
