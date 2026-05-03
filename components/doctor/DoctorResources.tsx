@@ -175,17 +175,17 @@ export default function DoctorResources({ doctorId, patients, selectedPatient, o
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Título</label>
-                <input type="text" placeholder="Ej. Registro emocional" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={input}/>
+                <label htmlFor="resource-title" className="mb-1.5 block text-sm font-medium text-slate-700">Título</label>
+                <input id="resource-title" type="text" placeholder="Ej. Registro emocional" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={input}/>
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Descripción</label>
-                <textarea rows={2} placeholder="Descripción breve del recurso..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={`${input} resize-none`}/>
+                <label htmlFor="resource-description" className="mb-1.5 block text-sm font-medium text-slate-700">Descripción</label>
+                <textarea id="resource-description" rows={2} placeholder="Descripción breve del recurso..." value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className={`${input} resize-none`}/>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Archivo (opcional)</label>
-                <input ref={fileRef} type="file" accept=".pdf,.mp3,.mp4,.wav,.docx,.txt" onChange={e => setFile(e.target.files?.[0] ?? null)} className="hidden"/>
+                <label htmlFor="resource-file" className="mb-1.5 block text-sm font-medium text-slate-700">Archivo (opcional)</label>
+                <input id="resource-file" ref={fileRef} type="file" accept=".pdf,.mp3,.mp4,.wav,.docx,.txt" onChange={e => setFile(e.target.files?.[0] ?? null)} className="hidden"/>
                 <button type="button" onClick={() => fileRef.current?.click()}
                   className="w-full rounded-[14px] border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500 transition hover:border-[#6F98BE] hover:bg-[#EEF4F8] hover:text-[#1E5A85]">
                   {file ? `📎 ${file.name}` : "Haz clic para seleccionar un archivo"}

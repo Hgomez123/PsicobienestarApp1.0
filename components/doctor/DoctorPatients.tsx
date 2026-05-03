@@ -319,6 +319,7 @@ export default function DoctorPatients({
 
                   <div className="flex gap-2">
                     <input
+                      aria-label="Enlace de Google Drive"
                       type="url"
                       placeholder="https://drive.google.com/..."
                       value={driveLinkValues[p.id] ?? p.drive_link ?? ""}
@@ -456,10 +457,11 @@ export default function DoctorPatients({
 
                 <div className="mt-6 space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label htmlFor="patient-name" className="mb-1.5 block text-sm font-medium text-slate-700">
                       Nombre completo *
                     </label>
                     <input
+                      id="patient-name"
                       type="text"
                       placeholder="Nombre del paciente"
                       value={form.name}
@@ -470,10 +472,11 @@ export default function DoctorPatients({
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                      <label htmlFor="patient-age" className="mb-1.5 block text-sm font-medium text-slate-700">
                         Edad
                       </label>
                       <input
+                        id="patient-age"
                         type="number"
                         placeholder="Ej. 28"
                         value={form.age}
@@ -483,10 +486,11 @@ export default function DoctorPatients({
                     </div>
 
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                      <label htmlFor="patient-phone" className="mb-1.5 block text-sm font-medium text-slate-700">
                         Teléfono
                       </label>
                       <input
+                        id="patient-phone"
                         type="tel"
                         placeholder="+502 0000-0000"
                         value={form.phone}
@@ -497,10 +501,11 @@ export default function DoctorPatients({
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label htmlFor="patient-email" className="mb-1.5 block text-sm font-medium text-slate-700">
                       Correo electrónico
                     </label>
                     <input
+                      id="patient-email"
                       type="email"
                       placeholder="correo@ejemplo.com"
                       value={form.email}
@@ -511,10 +516,11 @@ export default function DoctorPatients({
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                      <label htmlFor="patient-modality" className="mb-1.5 block text-sm font-medium text-slate-700">
                         Modalidad
                       </label>
                       <select
+                        id="patient-modality"
                         value={form.modality}
                         onChange={f("modality")}
                         className={input}
@@ -526,10 +532,10 @@ export default function DoctorPatients({
                     </div>
 
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                      <label htmlFor="patient-status" className="mb-1.5 block text-sm font-medium text-slate-700">
                         Estado
                       </label>
-                      <select value={form.status} onChange={f("status")} className={input}>
+                      <select id="patient-status" value={form.status} onChange={f("status")} className={input}>
                         <option>Activa</option>
                         <option>Pendiente</option>
                         <option>Inactiva</option>
@@ -538,10 +544,11 @@ export default function DoctorPatients({
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label htmlFor="patient-process" className="mb-1.5 block text-sm font-medium text-slate-700">
                       Enfoque terapéutico
                     </label>
                     <textarea
+                      id="patient-process"
                       rows={3}
                       placeholder="Ej. Ansiedad y regulación emocional"
                       value={form.process}
@@ -562,6 +569,7 @@ export default function DoctorPatients({
                         </p>
 
                         <input
+                          aria-label="Contraseña temporal del paciente"
                           type="password"
                           placeholder="Contraseña temporal (mín. 8 caracteres)"
                           value={form.password}
