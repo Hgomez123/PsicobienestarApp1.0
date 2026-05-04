@@ -72,9 +72,42 @@ Hallazgos de la auditoría exploratoria del 29/04/2026 (11 endpoints en 10 archi
 - **Hueco real**: `DELETE /api/patients` (ver Fase 4.6).
 - **Huecos menores para Fase 5.1**: XSS potencial en `notifications`, MIME client-controlable, status codes inconsistentes, errores ignorados silenciosamente en `available-slots`.
 
-### Frontend
+### Frontend — meta-plan a11y portal doctora ✅ cerrado 03/05/2026
 
-_(pendiente — se llenará en fases siguientes)_
+Auditoría a11y del portal doctora ejecutada el 02/05/2026. Hallazgos CRÍTICOS
+atacados con 8 PRs chicos por tópico, mergeados todos en `main` (PRs GitHub
+#4–#11). Orden: aria-labels → form labels → contraste → modal Escape → touch
+targets → emojis nav → emojis content → emojis dashboard/schedule. Smoke test
+manual entre cada PR.
+
+- **PR #4** — aria-label en 15 botones icon-only de la doctora.
+- **PR #5** — form labels con `htmlFor + id` y aria-label en inputs sin label visible.
+- **PR #6** — contraste de texto subido (`text-slate-400/300` → `500/600`) para cumplir AA 4.5:1.
+- **PR #7** — Escape cierra modales + foco vuelve al elemento de origen.
+  Hook nuevo `lib/hooks/useModalA11y.ts` consumido por los 4 modales del portal.
+  No incluye focus trap (Tab cyclical) — queda como deuda si se considera necesario.
+- **PR #8** — touch targets a ≥44px en mobile con responsive `h-11 md:h-9`
+  (header desktop sigue 36px, mobile 44px). Aplicado en DoctorHeader (3 botones),
+  DoctorMobileMenu (cerrar drawer), DoctorFollowUp (toggle objetivo, prev/next semana,
+  eliminar opción de check-in).
+- **PR #9** — emojis de navegación reemplazados por SVG outline (Heroicons-style)
+  en DoctorMobileMenu. Eliminado campo `icon` muerto de `SECTION_META` en DoctorHeader.
+  SVG inline duplicados con DoctorSidebar (decisión: priorizar PR chico sobre DRY;
+  extraer a `lib/icons/` si vale la pena en el futuro).
+- **PR #10** — `TYPE_ICON` (emojis) → SVG en DoctorRecommendations (Mensaje/Ejercicio/Reflexión)
+  y DoctorResources (PDF/Audio/Lectura/Video). Empty states y paperclip de adjunto también.
+- **PR #11** — emojis sueltos → SVG en DoctorDashboard (4 stats cards, empty ☀️, 2 alertas,
+  6 quick access) y DoctorSchedule (header solicitudes, empty calendar, link "📅 Calendar").
+
+**Decisión transversal**: caracteres tipográficos `✕` (U+2715) y `→` se mantuvieron
+como texto cuando ya tenían `aria-label` — no son emoji pictográfico y renderizan
+en font, no en sprite emoji. Reemplazo con SVG no aporta a a11y en esos casos.
+
+**Pendiente** (hallazgos NO-CRÍTICOS de la misma auditoría — sin fecha):
+- Focus trap en modales (Tab cyclical dentro del modal). PR #7 lo dejó fuera de scope.
+- Modales del paciente (`PortalSidebar`, `Modal.tsx`, `SimpleModal.tsx`, `OnboardingModal.tsx`)
+  podrían adoptar `useModalA11y` también — solo se aplicó a la doctora.
+- Resto del audit (visuales, copy, jerarquía) — sin compromiso.
 
 ### Estado del plan de hardening
 

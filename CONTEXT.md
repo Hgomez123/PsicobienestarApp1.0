@@ -5,7 +5,7 @@
 > Si algo en este archivo contradice la memoria de Claude o las
 > notas de cualquier asistente, **este archivo gana**.
 
-Última actualización: 2026-05-01
+Última actualización: 2026-05-03
 
 ---
 
@@ -52,6 +52,26 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 | 2   | Rate limiting con Upstash                                            | ⏳ Pendiente — código preparado, falta setup + migrar 12 call sites |
 | 6   | Verificación end-to-end                                              | ⏳ Pendiente |
 
+### Meta-plan a11y portal doctora — completado 03/05/2026 (en `main`)
+
+Trabajo paralelo al hardening: 8 PRs chicos por tópico, cerrando todos los
+hallazgos CRÍTICOS de la auditoría a11y del portal doctora. Mergeados en
+orden de menor a mayor riesgo, con smoke test manual entre cada uno.
+
+| PR  | Tópico                                                              | Archivos tocados |
+|-----|---------------------------------------------------------------------|------------------|
+| #4  | aria-label en botones icon-only                                     | 5 componentes doctora |
+| #5  | form labels (htmlFor + id) y aria-label en inputs sin label visible | 6 componentes doctora |
+| #6  | contraste de texto (text-slate-400/300 → 500/600)                   | 7 componentes doctora |
+| #7  | modales: cerrar con Escape + devolver foco al elemento de origen    | `lib/hooks/useModalA11y.ts` (nuevo) + 4 modales |
+| #8  | touch targets ≥44px en mobile (responsive `h-11 md:h-9`)            | DoctorHeader, DoctorMobileMenu, DoctorFollowUp |
+| #9  | emojis de navegación → SVG outline                                  | DoctorMobileMenu (NAV_EMOJIS), DoctorHeader (limpieza SECTION_META.icon) |
+| #10 | TYPE_ICON emojis → SVG (Recomendaciones, Recursos) + paperclip      | DoctorRecommendations, DoctorResources |
+| #11 | emojis sueltos → SVG (Dashboard stats/empty/alertas/quick access; Schedule) | DoctorDashboard, DoctorSchedule |
+
+**Pendiente**: hallazgos NO-CRÍTICOS de la misma auditoría (no se ejecutaron
+en este round). Sin compromiso de fecha — se atacará si surge necesidad.
+
 ### Fase 1 — verificada en Supabase el 28/04/2026
 
 - ✅ Trigger `profiles_prevent_role_change` (BEFORE UPDATE en `profiles`)
@@ -65,16 +85,18 @@ Verificar siempre con `git remote -v` al inicio de cada sesión.
 
 ---
 
-## Estado de las ramas (al 28/04/2026)
-main:                ... afeb8cc ── 486ae73 (header redesign)
-│
-└────── ba47a1a ── 870e9b5 (security-hardening, 16 commits Fase 1)
+## Estado de las ramas (al 03/05/2026)
 
-- `main` tiene el rediseño del header (commit `486ae73`)
-- `security-hardening` tiene la Fase 1 completa (16 commits)
-- Las ramas divergieron — pendiente reconciliar (merge o rebase) cuando se
-  retome el plan
-- `feat/header-redesign` ya mergeada a main, se puede borrar
+- **`main`** tiene 9 PRs mergeados desde el snapshot del 28/04/2026:
+  - PR #3 — refactor del menú hamburguesa portal doctora (alineado con paciente)
+  - PR #4 a #11 — meta-plan a11y portal doctora completo (ver sección abajo)
+  - Último HEAD: `f4cf9be` (Merge PR #11, 03/05/2026)
+- **`security-hardening`** sigue en `cf1acaf` (blueprint apiHelper Fase 5).
+- Las ramas divergieron mucho más — al retomar Fase 5 conviene mergear
+  `main` → `security-hardening` antes de seguir, para no trabajar sobre
+  archivos del portal doctora ya cambiados (DoctorDashboard, DoctorSchedule,
+  DoctorRecommendations, DoctorResources, DoctorPatients, DoctorFollowUp,
+  DoctorHeader, DoctorMobileMenu, lib/hooks/useModalA11y.ts).
 
 ---
 
