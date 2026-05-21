@@ -89,6 +89,6 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // Aplicar a todas las rutas excepto archivos estáticos de Next.js
-    "/((?!_next/static|_next/image|favicon.ico|logosinfondo.png).*)",
+    "/((?!_next/static|_next/image|favicon.ico|Logo%20original.svg).*)",
   ],
 };

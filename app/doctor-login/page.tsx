@@ -93,7 +93,7 @@ export default function DoctorLoginPage() {
           {/* Logo */}
           <div className="mb-5 flex justify-center">
             <Image
-              src="/logosinfondo.png"
+              src="/Logo%20original.svg"
               alt="Psicobienestar"
               width={130}
               height={40}

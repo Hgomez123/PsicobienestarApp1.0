@@ -152,12 +152,12 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
             onClick={() => setActiveHref("#inicio")}
           >
             <Image
-              src="/logosinfondo.png"
+              src="/Logo%20original.svg"
               alt="Psicobienestar"
-              width={170}
-              height={54}
+              width={220}
+              height={68}
               className={`w-auto object-contain transition-all duration-300 group-hover:scale-[1.04] ${
-                scrolled ? "h-10" : "h-11"
+                scrolled ? "h-14" : "h-16"
               }`}
               priority
             />

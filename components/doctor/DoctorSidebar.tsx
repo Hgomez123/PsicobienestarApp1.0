@@ -74,7 +74,7 @@ export default function DoctorSidebar({
         <div className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logosinfondo.png"
+            src="/Logo%20original.svg"
             alt="Psicobienestar"
             style={{ height: 26, width: "auto", filter: "brightness(0) invert(1)", opacity: 0.85 }}
           />
