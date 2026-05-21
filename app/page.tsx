@@ -99,6 +99,8 @@ const services = [
     description:
       "Acompañamiento personalizado para ansiedad, estrés, duelo, autoestima y crecimiento personal. Un entorno seguro donde tú eres el centro y la confidencialidad es absoluta.",
     detail: "Duración: 60 min · Frecuencia: semanal o quincenal",
+    image: "/Escucha Activa.jpg",
+    alt: "Escucha activa en terapia individual",
   },
   {
     tag: "Sesiones Virtuales",
@@ -106,6 +108,8 @@ const services = [
     description:
       "Atención psicológica de alto nivel desde donde estés. La misma profundidad y confidencialidad de una sesión presencial, sin límites geográficos ni desplazamientos.",
     detail: "Plataforma segura · Horarios flexibles",
+    image: "/Misma calidad Desde.jpg",
+    alt: "Sesión virtual con la misma calidad desde cualquier lugar",
   },
   {
     tag: "Atención Presencial",
@@ -113,6 +117,8 @@ const services = [
     description:
       "Sesiones en persona en Psicobienestar-Renovati, zona 10 de Ciudad de Guatemala. Un espacio diseñado para que te sientas cómodo/a y seguro/a desde el primer momento.",
     detail: "Psicobienestar-Renovati · Ciudad de Guatemala",
+    image: "/Entorno Calido Y pro.jpg",
+    alt: "Entorno cálido y profesional en Guatemala",
   },
 ];
 
@@ -233,7 +239,7 @@ export default function Home() {
 
           {/* Encabezado */}
           <div className="relative flex items-center justify-between border-b border-slate-100/60 px-6 py-5">
-            <Image src="/logosinfondo.png" alt="Psicobienestar" width={130} height={42} className="logo-img h-9 w-auto object-contain" />
+            <Image src="/Logo%20original.svg" alt="Psicobienestar" width={170} height={54} className="logo-img h-12 w-auto object-contain" />
             <button
               type="button"
               onClick={() => setMenuOpen(false)}
@@ -512,7 +518,7 @@ export default function Home() {
                     src="/doctora.jpg"
                     alt="Lic. María Eugenia Castillo García"
                     fill
-                    className="object-cover"
+                    className="object-cover object-[center_25%]"
                     sizes="(max-width: 768px) 90vw, 384px"
                     priority
                   />
@@ -664,20 +670,17 @@ export default function Home() {
               >
                 {/* Visual */}
                 <div
-                  className={`flex h-64 items-center justify-center rounded-[28px] lg:h-full 'lg:min-h-[280px] ${
+                  className={`relative h-64 overflow-hidden rounded-[28px] lg:h-full lg:min-h-[280px] ${
                     i % 2 === 1 ? "lg:order-2" : "lg:order-1"
                   }`}
-                  style={{
-                    background: i === 0
-                      ? "linear-gradient(145deg, #EEF4F8 0%, #DCEAF6 100%)"
-                      : i === 1
-                      ? "linear-gradient(145deg, #1E3550 0%, #1E5A85 100%)"
-                      : "linear-gradient(145deg, #EEF4F8 0%, #D0E4F0 100%)",
-                  }}
                 >
-                  <span className="select-none text-[6rem] leading-none">
-                    {i === 0 ? "🧘" : i === 1 ? "💻" : "🏥"}
-                  </span>
+                  <Image
+                    src={s.image}
+                    alt={s.alt}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 </div>
 
                 {/* Texto */}
@@ -742,11 +745,11 @@ export default function Home() {
           <div className="grid gap-5 lg:grid-cols-[1.25fr_1fr]">
 
             {/* ── Portal del Paciente ── */}
-            <div className="scroll-reveal slide-left portal-benefit-card">
+            <div className="scroll-reveal slide-left portal-benefit-card flex h-full flex-col">
               {/* Glow decorativo */}
               <div className="portal-benefit-glow" aria-hidden />
 
-              <div className="relative z-10">
+              <div className="relative z-10 flex flex-1 flex-col">
                 <span className="portal-benefit-badge">Incluido · Exclusivo</span>
                 <h3 className="mt-4 text-2xl font-bold text-white lg:text-3xl">
                   Portal del Paciente
@@ -764,10 +767,26 @@ export default function Home() {
                   ))}
                 </ul>
 
-                <a href="/login" className="portal-benefit-cta mt-8 inline-flex items-center gap-2">
-                  Acceder al portal
-                  <span aria-hidden className="quote-cta-arrow">→</span>
-                </a>
+                {/* Stats / garantías */}
+                <div className="mt-7 grid grid-cols-3 gap-2.5">
+                  {[
+                    { label: "Acceso", value: "24/7" },
+                    { label: "Privacidad", value: "100%" },
+                    { label: "Dispositivos", value: "Todos" },
+                  ].map(stat => (
+                    <div key={stat.label} className="portal-benefit-stat">
+                      <p className="portal-benefit-stat-value">{stat.value}</p>
+                      <p className="portal-benefit-stat-label">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-auto pt-8">
+                  <a href="/login" className="portal-benefit-cta inline-flex items-center gap-2">
+                    Acceder al portal
+                    <span aria-hidden className="quote-cta-arrow">→</span>
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -807,7 +826,7 @@ export default function Home() {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="info-benefit-label">Tarifa por sesión</p>
-                    <p className="mt-1 text-[2.2rem] font-bold tracking-tight text-slate-900">Q 250</p>
+                    <p className="mt-1 text-[2.2rem] font-bold tracking-tight text-slate-900">Q 300</p>
                     <p className="mt-0.5 text-xs text-slate-400">Cita previa · horarios flexibles</p>
                   </div>
                   <div className="price-icon-box">
@@ -830,6 +849,50 @@ export default function Home() {
                       También disponible en línea
                     </p>
                   </div>
+                </div>
+
+                {/* Preview de ubicación + acciones (sin iframe externo) */}
+                <div className="mt-5 location-preview">
+                  <div className="location-preview-grid" aria-hidden />
+                  <div className="location-preview-glow" aria-hidden />
+                  <div className="relative z-10 flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+                    <div className="location-pin">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-800">Edificio RENOVATI · Zona 10</p>
+                    <p className="text-xs text-slate-500">Ciudad de Guatemala</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Edificio+Renovati+Centro+M%C3%A9dico+Empresarial+Zona+10+Guatemala"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="location-action location-action-primary"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                    </svg>
+                    Google Maps
+                  </a>
+                  <a
+                    href="https://www.waze.com/ul?q=Edificio%20Renovati%20Centro%20M%C3%A9dico%20Empresarial%20Zona%2010%20Guatemala&navigate=yes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="location-action"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                      <line x1="9" y1="9" x2="9.01" y2="9"/>
+                      <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    Waze
+                  </a>
                 </div>
               </div>
 
@@ -964,7 +1027,7 @@ export default function Home() {
               {/* CTA WhatsApp */}
               <div className="mt-10 overflow-hidden 'rounded-[24px] bg-[#1E5A85] p-6 shadow-[0_16px_40px_rgba(30,90,133,0.22)]">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">¿Lista/o para comenzar?</p>
-                <p className="mt-2 text-lg font-semibold text-white">Primera sesión con 75% de descuento</p>
+                <p className="mt-2 text-lg font-semibold text-white">Primera sesión con 15% de descuento</p>
                 <p className="mt-1.5 text-sm leading-6 text-white/60 '[text-wrap:balance]">
                   Cuéntame sobre lo que estás viviendo.
                 </p>
@@ -1080,11 +1143,11 @@ export default function Home() {
             {/* Columna Brand */}
             <div>
               <Image
-                src="/logosinfondo.png"
+                src="/Logo%20original.svg"
                 alt="Psicobienestar"
-                width={136}
-                height={44}
-                className="h-9 w-auto object-contain brightness-0 invert opacity-85"
+                width={180}
+                height={56}
+                className="h-12 w-auto object-contain brightness-0 invert opacity-85"
               />
               <p className="mt-4 'max-w-[290px] text-sm leading-7 text-white/45 '[text-wrap:balance]">
                 Acompañamiento psicológico profesional, humano y confidencial. Presencial y virtual en Guatemala.

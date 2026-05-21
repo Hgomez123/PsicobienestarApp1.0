@@ -2,16 +2,13 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-typescript: {
-    ignoreBuildErrors: true,  // ← agregar esto
-  },
   turbopack: {
     root: path.join(__dirname),
   },
 
   /**
    * Cabeceras de seguridad HTTP aplicadas a nivel de servidor.
-   * El middleware las complementa por si algún path queda fuera.
+   * El proxy las complementa por si algún path queda fuera.
    */
   async headers() {
     return [
@@ -46,3 +43,4 @@ typescript: {
 };
 
 export default nextConfig;
+

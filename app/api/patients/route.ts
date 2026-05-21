@@ -157,6 +157,18 @@ export async function DELETE(req: NextRequest) {
 
   /* ── Eliminar ──────────────────────────────────────────── */
   const admin = getAdmin();
+
+  /* ── Verificar ownership: el paciente debe pertenecer a esta doctora ── */
+  const { data: ownedPatient } = await admin
+    .from("patients")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("doctor_id", verifiedDoctorId)
+    .maybeSingle();
+  if (!ownedPatient) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+
   const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     return NextResponse.json({ error: "Error al eliminar." }, { status: 500 });
