@@ -655,20 +655,26 @@ export default function DoctorFollowUp({ doctorId, patients, selectedPatient, on
                       </div>
 
                       {/* Agregar */}
-                      <div className="flex gap-2">
-                        <input
-                          aria-label="Nueva opción de check-in emocional"
-                          type="text"
-                          placeholder='Ej. "Me sentí ansioso/a"'
-                          value={newOpt}
-                          onChange={e => setNewOpt(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") addOpt(); }}
-                          className="flex-1 rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#6F98BE] focus:bg-white"
-                        />
-                        <button onClick={addOpt} disabled={!newOpt.trim()}
-                          className="rounded-full border border-[#6F98BE] px-4 py-2 text-sm text-[#1E5A85] transition hover:bg-[#EEF4F8] disabled:opacity-40">
-                          + Agregar
-                        </button>
+                      <div>
+                        <div className="flex gap-2">
+                          <input
+                            aria-label="Nueva opción de check-in emocional"
+                            type="text"
+                            placeholder='Ej. "Me sentí ansioso/a"'
+                            value={newOpt}
+                            maxLength={100}
+                            onChange={e => setNewOpt(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") addOpt(); }}
+                            className="flex-1 rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-[#6F98BE] focus:bg-white"
+                          />
+                          <button onClick={addOpt} disabled={!newOpt.trim()}
+                            className="rounded-full border border-[#6F98BE] px-4 py-2 text-sm text-[#1E5A85] transition hover:bg-[#EEF4F8] disabled:opacity-40">
+                            + Agregar
+                          </button>
+                        </div>
+                        <span className={`mt-1.5 block text-xs ${newOpt.length > 90 ? "text-red-500" : "text-slate-400"}`}>
+                          {newOpt.length}/100
+                        </span>
                       </div>
 
                       {/* Guardar */}
