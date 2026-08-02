@@ -50,6 +50,15 @@ export async function PATCH(req: NextRequest) {
   if (!patientId || !/^[0-9a-f-]{36}$/i.test(patientId)) {
     return NextResponse.json({ error: "patientId inválido." }, { status: 400 });
   }
+  const tooLong = options.find(o => o.length > 100);
+  if (tooLong) {
+    return NextResponse.json(
+      {
+        error: `Cada opción debe tener máximo 100 caracteres. La opción "${tooLong.slice(0, 40)}..." tiene ${tooLong.length}.`,
+      },
+      { status: 400 }
+    );
+  }
   if (options.length > 20) {
     return NextResponse.json({ error: "Máximo 20 opciones." }, { status: 400 });
   }

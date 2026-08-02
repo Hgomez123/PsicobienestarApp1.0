@@ -109,6 +109,52 @@ en font, no en sprite emoji. Reemplazo con SVG no aporta a a11y en esos casos.
   podrían adoptar `useModalA11y` también — solo se aplicó a la doctora.
 - Resto del audit (visuales, copy, jerarquía) — sin compromiso.
 
+### Hallazgos derivados de investigación del check-in (01/08/2026)
+
+Detectados durante la investigación del bug de truncado en el check-in emocional
+(commit resultante: fix del truncado + límite de 100 caracteres). No forman parte
+del scope del fix aplicado pero conviene no perderlos.
+
+- **Mapa `CHECKIN_EMOJIS` efectivamente muerto** en `components/portal/PortalSessionPanel.tsx:17-30`.
+  El mapa matchea por igualdad exacta de string, pero la doctora escribe las opciones
+  libremente en `DoctorFollowUp.tsx` sin autocompletado ni sugerencias. El propio
+  placeholder del input dice `Ej. "Me sentí ansioso/a"` — que no coincide con la clave
+  `"Ansioso/a"` del mapa. Cualquier diferencia (mayúscula, acento, singular/plural)
+  rompe el match. Resultado: casi todas las opciones renderizan el fallback 💭 y
+  las 8 entradas del mapa son código efectivamente muerto. Requiere decisión de UX
+  antes de código: matching fuzzy, hacer que la doctora elija emoji al crear la
+  opción, o menú de opciones predefinidas con emoji asociado. Sesión propia.
+
+- **Fallo de red silencioso al enviar check-in** en `app/portal/page.tsx:421-423`.
+  El `catch` del `fetch` a `/api/checkin` hace `console.error` pero nunca llama a
+  `setCheckinError`. Si se cae la red o el fetch falla por cualquier razón que no
+  llegue a `res.ok`, el paciente pulsa "Enviar check-in" y no pasa absolutamente
+  nada visible — sin spinner, sin error, sin confirmación. Fix: agregar
+  `setCheckinError("No se pudo enviar. Revisa tu conexión e intenta de nuevo.")`
+  o similar en el `catch`.
+
+- **Rama muerta en manejo de error del check-in** en `app/portal/page.tsx:409-417`.
+  El branch que renderiza "tabla 'checkins' o columna faltante" detrás de
+  `json.code === "MISSING_COLUMN"` nunca se ejecuta: `/api/checkin` no devuelve
+  ese código (sus errores usan códigos crudos de Postgres tipo `"42703"` en el 500,
+  o mensajes propios en 400). Ese literal solo existe en `/api/checkin-options`, otro
+  endpoint. Limpiable durante el refactor de Fase 5 (ver también el TODO existente
+  "corregir 4 endpoints que filtran `error.message` crudo" — mismo endpoint).
+
+- **Mismatch `duration_minutes` distribuido en 5 lugares.** Dos escuelas repartidas
+  en tres capas: la DB y el generador de Google Calendar dicen 50; el formulario
+  de la doctora y otro call site dicen 60.
+  - `lib/supabase/schema.sql:49` → default 50
+  - `components/doctor/DoctorSchedule.tsx:22` (EMPTY_FORM) → 60
+  - `components/doctor/DoctorSchedule.tsx:297` (fallback del input) → 60
+  - `app/doctor/page.tsx:186` → 60
+  - `lib/utils/calendar.ts:21` (`buildGCalUrl` default) → 50
+
+  En la práctica no es bug activo: el UI manda 60 explícito y `buildGCalUrl` recibe
+  `appt.duration_minutes` explícito desde `DoctorSchedule.tsx:384`. Pero los
+  defaults distintos son bomba latente para cualquier caller futuro que se olvide
+  de pasar el argumento. Decidir cuál es la verdad y unificar las 5 líneas.
+
 ### Estado del plan de hardening
 
 - **Fase 1 — SQL + Supabase**: ✅ aplicada y verificada el 28/04/2026 en Supabase. Migraciones consolidadas en `lib/supabase/migrations/`, schema final en `lib/supabase/schema.sql`.

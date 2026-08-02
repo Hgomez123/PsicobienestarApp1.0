@@ -136,7 +136,7 @@ export default function PortalSessionPanel({
             </div>
           ) : (
             <>
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {checkinOptions.map((option) => {
                   const active = selectedCheckin === option;
                   return (
@@ -156,7 +156,7 @@ export default function PortalSessionPanel({
                       }}
                     >
                       <span className="text-base">{getEmoji(option)}</span>
-                      <span className="truncate">{option}</span>
+                      <span>{option}</span>
                     </button>
                   );
                 })}
