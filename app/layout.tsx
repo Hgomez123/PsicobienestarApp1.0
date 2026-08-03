@@ -13,19 +13,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://psicobienestarguatemala.com"),
   title: "Psicobienestar | Psicólogos en línea para Latinoamérica",
   description:
-    "Consultas psicológicas online con profesionales certificados. Atención para Guatemala, México, Colombia, Argentina y toda Latinoamérica. Agenda tu cita hoy.",
+    "Terapia psicológica personalizada en Zona 10, Guatemala. Neuropsicología y salud mental para adultos con la Lic. María Eugenia Castillo. Presencial y online.",
   keywords:
     "psicólogo online, psicología Guatemala, terapia psicológica latinoamérica, consulta psicológica, salud mental",
   openGraph: {
     title: "Psicobienestar | Psicólogos en línea para Latinoamérica",
     description:
-      "Consultas psicológicas online con profesionales certificados. Atención para Guatemala, México, Colombia, Argentina y toda Latinoamérica. Agenda tu cita hoy.",
-    url: "https://psicobienestar.vercel.app",
+      "Terapia psicológica personalizada en Zona 10, Guatemala. Neuropsicología y salud mental para adultos con la Lic. María Eugenia Castillo. Presencial y online.",
+    url: "https://psicobienestarguatemala.com",
     siteName: "Psicobienestar",
     locale: "es_GT",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Psicobienestar | Psicólogos en línea para Latinoamérica",
+    description:
+      "Terapia psicológica personalizada en Zona 10, Guatemala. Neuropsicología y salud mental para adultos con la Lic. María Eugenia Castillo. Presencial y online.",
   },
 };
 

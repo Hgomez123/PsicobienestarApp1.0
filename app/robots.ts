@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/doctor"],
+      disallow: ["/api/", "/portal/", "/doctor/", "/login", "/doctor-login"],
     },
-    sitemap: "https://psicobienestar.vercel.app/sitemap.xml",
+    sitemap: "https://psicobienestarguatemala.com/sitemap.xml",
   };
 }
