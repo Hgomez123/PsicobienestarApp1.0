@@ -69,8 +69,8 @@ export default function DoctorHeader({
           )}
 
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[17px] font-bold text-slate-900 leading-tight">{activeSection}</h1>
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="text-[17px] font-bold text-slate-900 leading-tight truncate">{activeSection}</h1>
               {meta && (
                 <span
                   className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
