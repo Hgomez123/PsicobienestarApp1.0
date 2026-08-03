@@ -15,7 +15,7 @@ export default function SimpleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-[0_25px_80px_rgba(15,23,42,0.25)]">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-[28px] bg-white p-6 shadow-[0_25px_80px_rgba(15,23,42,0.25)]">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm text-slate-500">Portal del paciente</p>
