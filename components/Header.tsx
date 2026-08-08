@@ -13,10 +13,11 @@ type HeaderProps = {
 
 export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-  const [scrollPct, setScrollPct] = useState(0);
   const [activeHref, setActiveHref] = useState<string>(navLinks[0]?.href ?? "");
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
+  // Barra de progreso: se actualiza por DOM, no por estado (ver efecto de scroll)
+  const progressRef = useRef<HTMLDivElement | null>(null);
   // Container del indicator — usado como referencia para calcular posiciones
   const linksRowRef = useRef<HTMLDivElement | null>(null);
   const indicatorRef = useRef<HTMLSpanElement | null>(null);
@@ -25,15 +26,36 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
 
   /* ── Scroll: morph del header + barra de progreso ─────────── */
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0;
+
+    const apply = () => {
+      frame = 0;
       const h = document.documentElement;
+
+      // Booleano: React descarta el render cuando el valor no cambia, así que
+      // esto solo re-renderiza al cruzar el umbral, no en cada scroll.
       setScrolled(h.scrollTop > 40);
+
+      // La barra avanza en cada frame. Pasarla por estado re-renderizaría el
+      // header entero en cada evento de scroll, así que se escribe al DOM.
       const max = h.scrollHeight - h.clientHeight;
-      setScrollPct(max > 0 ? (h.scrollTop / max) * 100 : 0);
+      const pct = max > 0 ? h.scrollTop / max : 0;
+      if (progressRef.current) {
+        progressRef.current.style.transform = `scaleX(${pct})`;
+      }
     };
-    onScroll();
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    apply();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   /* ── Scroll-spy: detectar sección visible y activar el link ─ */
@@ -102,18 +124,47 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
   useEffect(() => {
     const el = ctaRef.current;
     if (!el) return;
-    const onMove = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = e.clientX - r.left - r.width / 2;
-      const y = e.clientY - r.top - r.height / 2;
-      el.style.transform = `translate(${x * 0.18}px, ${y * 0.18}px)`;
+    // Efecto puramente decorativo y guiado por el puntero: no corre con
+    // movimiento reducido activado.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let frame = 0;
+    let pointer: { x: number; y: number } | null = null;
+    // El rect se mide una vez al entrar, sin transform aplicado. Medirlo en
+    // cada mousemove costaba un layout por evento y, al incluir el translate
+    // ya aplicado, realimentaba su propio cálculo.
+    let rect: DOMRect | null = null;
+
+    const apply = () => {
+      frame = 0;
+      if (!pointer || !rect) return;
+      const x = (pointer.x - rect.left - rect.width / 2) * 0.18;
+      const y = (pointer.y - rect.top - rect.height / 2) * 0.18;
+      el.style.transform = `translate(${x}px, ${y}px)`;
     };
-    const onLeave = () => { el.style.transform = ""; };
+
+    const onEnter = () => {
+      el.style.transform = "";
+      rect = el.getBoundingClientRect();
+    };
+    const onMove = (e: MouseEvent) => {
+      pointer = { x: e.clientX, y: e.clientY };
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    const onLeave = () => {
+      pointer = null;
+      rect = null;
+      el.style.transform = "";
+    };
+
+    el.addEventListener("mouseenter", onEnter);
     el.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", onLeave);
     return () => {
+      el.removeEventListener("mouseenter", onEnter);
       el.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", onLeave);
+      if (frame) cancelAnimationFrame(frame);
     };
   }, []);
 
@@ -121,14 +172,15 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
     <>
       {/* Barra de progreso de scroll */}
       <div
+        ref={progressRef}
         aria-hidden="true"
-        className="fixed inset-x-0 top-0 z-[60] h-[3px]"
+        className="fixed inset-x-0 top-0 z-[60] h-[3px] origin-left"
         style={{
-          width: `${scrollPct}%`,
+          transform: "scaleX(0)",
           background:
-            "linear-gradient(90deg, #1E5A85 0%, #2d7aaa 50%, #6F98BE 100%)",
+            "linear-gradient(90deg, var(--color-brand) 0%, var(--color-brand-bright) 50%, var(--color-brand-muted) 100%)",
           boxShadow: "0 0 12px rgba(45,122,170,0.45)",
-          transition: "width .12s linear",
+          transition: "transform .12s linear",
         }}
       />
 
@@ -161,7 +213,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
               }`}
               priority
             />
-            <span className="hidden border-l border-slate-200 pl-3 text-[12px] font-medium leading-tight text-[#6F98BE] lg:block">
+            <span className="hidden border-l border-slate-200 pl-3 text-[12px] font-medium leading-tight text-brand-muted lg:block">
               Psicología Clínica<br />Profesional · Guatemala
             </span>
           </a>
@@ -190,10 +242,11 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
                     onFocus={() => setHoveredHref(href)}
                     onBlur={() => setHoveredHref(null)}
                     onClick={() => setActiveHref(href)}
+                    aria-current={isActive ? "true" : undefined}
                     className={`relative rounded-xl px-5 py-2.5 text-[15px] font-medium transition-colors duration-200 ${
                       isActive
-                        ? "text-[#1E5A85]"
-                        : "text-slate-600 hover:text-[#1E5A85]"
+                        ? "text-brand"
+                        : "text-slate-600 hover:text-brand"
                     }`}
                   >
                     {label}
@@ -208,7 +261,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
                 className="pointer-events-none absolute -bottom-1 h-[3px] rounded-full opacity-0"
                 style={{
                   background:
-                    "linear-gradient(90deg, #1E5A85 0%, #2d7aaa 100%)",
+                    "linear-gradient(90deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)",
                   boxShadow: "0 4px 12px rgba(30,90,133,0.45)",
                   transition:
                     "left .35s cubic-bezier(.4,0,.2,1), width .35s cubic-bezier(.4,0,.2,1), opacity .2s",
@@ -221,7 +274,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
           <div className="hidden shrink-0 items-center gap-3 md:flex">
             <a
               href="/login"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-[14px] font-medium text-slate-700 transition-all duration-200 hover:border-[#1E5A85] hover:bg-[#EEF4F8] hover:text-[#1E5A85]"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-[14px] font-medium text-slate-700 transition-all duration-200 hover:border-brand hover:bg-brand-tint hover:text-brand"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -234,7 +287,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
               href="#contacto"
               className="btn-shimmer inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgba(30,90,133,0.34)]"
               style={{
-                background: "linear-gradient(135deg, #1E5A85 0%, #2d7aaa 100%)",
+                background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)",
                 transition: "transform .25s cubic-bezier(.2,.9,.3,1.2)",
               }}
             >
@@ -257,7 +310,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
               onClick={onOpenMenu}
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={menuOpen}
-              className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-[#1E5A85]/40 hover:text-[#1E5A85] ${menuOpen ? "ham-open" : ""}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition-all hover:border-brand/40 hover:text-brand ${menuOpen ? "ham-open" : ""}`}
             >
               <span className="flex flex-col gap-[5px]">
                 <span className="ham-line ham-line-1" />
