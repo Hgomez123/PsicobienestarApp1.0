@@ -22,7 +22,6 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
   const linksRowRef = useRef<HTMLDivElement | null>(null);
   const indicatorRef = useRef<HTMLSpanElement | null>(null);
   const linkRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
-  const ctaRef = useRef<HTMLAnchorElement | null>(null);
 
   /* ── Scroll: morph del header + barra de progreso ─────────── */
   useEffect(() => {
@@ -120,53 +119,9 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Magnetic CTA ─────────────────────────────────────────── */
-  useEffect(() => {
-    const el = ctaRef.current;
-    if (!el) return;
-    // Efecto puramente decorativo y guiado por el puntero: no corre con
-    // movimiento reducido activado.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    let frame = 0;
-    let pointer: { x: number; y: number } | null = null;
-    // El rect se mide una vez al entrar, sin transform aplicado. Medirlo en
-    // cada mousemove costaba un layout por evento y, al incluir el translate
-    // ya aplicado, realimentaba su propio cálculo.
-    let rect: DOMRect | null = null;
-
-    const apply = () => {
-      frame = 0;
-      if (!pointer || !rect) return;
-      const x = (pointer.x - rect.left - rect.width / 2) * 0.18;
-      const y = (pointer.y - rect.top - rect.height / 2) * 0.18;
-      el.style.transform = `translate(${x}px, ${y}px)`;
-    };
-
-    const onEnter = () => {
-      el.style.transform = "";
-      rect = el.getBoundingClientRect();
-    };
-    const onMove = (e: MouseEvent) => {
-      pointer = { x: e.clientX, y: e.clientY };
-      if (!frame) frame = requestAnimationFrame(apply);
-    };
-    const onLeave = () => {
-      pointer = null;
-      rect = null;
-      el.style.transform = "";
-    };
-
-    el.addEventListener("mouseenter", onEnter);
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
-    return () => {
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
+  /* El CTA magnético (seguía al cursor con un transform) se eliminó: el glow
+     ambiental ya persigue al puntero y los dos efectos competían en la misma
+     zona. Ahora el botón responde con luz vía .btn-glow, sin JS. */
 
   return (
     <>
@@ -213,7 +168,7 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
               }`}
               priority
             />
-            <span className="hidden border-l border-slate-200 pl-3 text-[12px] font-medium leading-tight text-brand-muted lg:block">
+            <span className="hidden border-l border-slate-200 pl-3 text-[12px] font-medium leading-tight text-brand-muted-ink lg:block">
               Psicología Clínica<br />Profesional · Guatemala
             </span>
           </a>
@@ -283,12 +238,10 @@ export default function Header({ navLinks, menuOpen, onOpenMenu }: HeaderProps) 
               Portal paciente
             </a>
             <a
-              ref={ctaRef}
               href="#contacto"
-              className="btn-shimmer inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgba(30,90,133,0.34)]"
+              className="btn-glow inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-semibold text-white"
               style={{
                 background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)",
-                transition: "transform .25s cubic-bezier(.2,.9,.3,1.2)",
               }}
             >
               <span

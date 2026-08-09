@@ -15,19 +15,27 @@
   --color-brand-bright: #2D7AAA;
   --color-brand-muted: #6F98BE;
   --color-brand-ink: #1E3550;
+
+  /* #6F98BE da 3.04:1 sobre blanco y 4.11:1 sobre el footer: falla AA en sus
+     dos fondos cuando lleva texto. Sirve para bordes, gradientes e íconos,
+     así que se queda, y el texto usa estas dos variantes. No se cambió el
+     token base porque .login-field-input:focus lo consume desde las páginas
+     de login, fuera del alcance de este trabajo. */
+  --color-brand-muted-ink: #4F7396;
+  --color-brand-muted-soft: #8FB2CF;
   --color-brand-tint: #EEF4F8;
   --color-brand-line: #D0E5F0;
 
   /* Categorías de los temas tratados. La familia "blue" reusa la marca y la
      "slate" usa la escala propia de Tailwind. */
   --color-tag-purple-bg: #F0EDF8;
-  --color-tag-purple-fg: #6B5FA6;
+  --color-tag-purple-fg: #63569C;
   --color-tag-purple-line: #D5CEEE;
   --color-tag-teal-bg: #EEF6F7;
-  --color-tag-teal-fg: #2E7A82;
+  --color-tag-teal-fg: #2A6F77;
   --color-tag-teal-line: #BCD9DD;
   --color-tag-green-bg: #EEF5F1;
-  --color-tag-green-fg: #3D7A54;
+  --color-tag-green-fg: #37704C;
   --color-tag-green-line: #C5DCCE;
   --color-tag-amber-bg: #FDF6EE;
   --color-tag-amber-fg: #946235;
@@ -43,6 +51,50 @@ body {
   background: #f0f5f9;
   color: #0f172a;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ===================== GLOW DE CURSOR ===================== */
+
+/*
+  Resplandor ambiental que sigue al puntero (components/CursorGlow.tsx).
+
+  Va POR ENCIMA del contenido: casi todas las secciones tienen fondo opaco y
+  detrás quedaría tapado. Para no cubrir el texto se pinta con
+  mix-blend-mode: multiply a opacidad muy baja — oscurece apenas, no tapa.
+
+  La suavidad la da la caída del propio radial-gradient, no un filter: blur().
+  Un blur sobre un elemento fixed de 900px combinado con mix-blend-mode es de
+  lo más caro que existe en compositing; la caída del gradiente es gratis.
+
+  z-index 40 lo deja debajo del header (50), el menú móvil y la barra de
+  progreso (60) y el skip link (70): tiñe el contenido, nunca el chrome.
+*/
+:root {
+  --cursor-glow-alpha: 0.055;
+}
+
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  width: 900px;
+  height: 900px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms ease;
+  mix-blend-mode: multiply;
+  will-change: transform;
+  background: radial-gradient(
+    circle closest-side,
+    rgb(30 90 133 / var(--cursor-glow-alpha)) 0%,
+    rgb(30 90 133 / calc(var(--cursor-glow-alpha) * 0.45)) 45%,
+    transparent 72%
+  );
+}
+
+.cursor-glow[data-live="true"] {
+  opacity: 1;
 }
 
 /* ===================== KEYFRAMES ===================== */
@@ -216,6 +268,9 @@ body {
   transform: translateY(32px);
   transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  /* El stagger lo declara el JSX con --reveal-i. Los :nth-child que había
+     antes solo cubrían 3 hijos y dependían de la posición en el DOM. */
+  transition-delay: calc(var(--reveal-i, 0) * 80ms);
 }
 
 .scroll-reveal.slide-left {
@@ -231,10 +286,6 @@ body {
   transform: translate(0, 0);
 }
 
-/* Staggered children */
-.scroll-reveal:nth-child(2) { transition-delay: 0.1s; }
-.scroll-reveal:nth-child(3) { transition-delay: 0.2s; }
-.scroll-reveal:nth-child(4) { transition-delay: 0.3s; }
 
 /* ===================== SERVICE CARDS ===================== */
 
@@ -456,6 +507,7 @@ body {
   transform: translateY(18px);
   transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
               transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--reveal-i, 0) * 70ms);
 }
 
 .stagger-reveal.in-view {
@@ -463,11 +515,6 @@ body {
   transform: translateY(0);
 }
 
-.stagger-reveal:nth-child(1) { transition-delay: 0.04s; }
-.stagger-reveal:nth-child(2) { transition-delay: 0.12s; }
-.stagger-reveal:nth-child(3) { transition-delay: 0.20s; }
-.stagger-reveal:nth-child(4) { transition-delay: 0.28s; }
-.stagger-reveal:nth-child(5) { transition-delay: 0.36s; }
 
 /* ===================== CARD 3D TILT ===================== */
 
@@ -483,27 +530,54 @@ body {
   100% { left: 120%; }
 }
 
-.btn-shimmer {
+/* ===================== BOTÓN: RESPLANDOR DESDE EL BORDE ===================== */
+
+/*
+  El botón "se enciende" en hover: un halo del color de marca crece desde
+  debajo. Mismo lenguaje que el glow del cursor — luz, no movimiento — para
+  que los dos efectos se lean como un sistema y no como trucos sueltos.
+
+  Sin escala a propósito: el desplazamiento compite con el reveal de la
+  sección. Acá solo cambia la luz.
+*/
+.btn-glow {
   position: relative;
-  overflow: hidden;
+  box-shadow: 0 4px 14px rgb(30 90 133 / 0.22);
+  transition:
+    box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-shimmer::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -80%;
-  width: 40%;
-  height: 200%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.18),
-    transparent
-  );
-  transform: skewX(-20deg);
-  animation: btnShimmer 3.5s ease-in-out infinite;
+.btn-glow:hover {
+  box-shadow:
+    0 6px 18px rgb(30 90 133 / 0.28),
+    0 0 34px 4px rgb(30 90 133 / 0.30);
+  filter: saturate(1.06) brightness(1.03);
 }
+
+.btn-glow:active {
+  box-shadow: 0 2px 8px rgb(30 90 133 / 0.26);
+  transition-duration: 90ms;
+}
+
+/* Variante para botones claros sobre fondo de marca: el halo azul no se ve
+   contra azul, así que ahí la luz es blanca. */
+.btn-glow--on-dark {
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.14);
+}
+
+.btn-glow--on-dark:hover {
+  box-shadow:
+    0 6px 18px rgb(0 0 0 / 0.18),
+    0 0 30px 4px rgb(255 255 255 / 0.34);
+}
+
+/* El foco no depende del hover ni de ninguna animación. */
+.btn-glow:focus-visible {
+  outline: 3px solid rgb(30 90 133 / 0.55);
+  outline-offset: 3px;
+}
+
 
 /* ===================== HERO SCROLL FADE ===================== */
 
@@ -618,24 +692,9 @@ body {
 }
 
 /* CTA del menú móvil */
-.mobile-cta {
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.mobile-cta:hover {
-  transform: translateY(-1px);
-}
-.mobile-cta::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 60px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-  transform: skewX(-18deg);
-  left: -80px;
-  animation: btnShimmer 3s ease-in-out infinite;
-}
+/* .mobile-cta se reemplazó por .btn-glow: tenía el mismo shimmer infinito que
+   sacamos del resto de los CTAs. El keyframe btnShimmer sigue vivo para
+   .login-submit::after y .login-btn::after, que están fuera de alcance. */
 
 /* Hamburger → X transform */
 .ham-line {
@@ -1108,8 +1167,8 @@ body {
   border-radius: 999px;
   border-width: 1px;
   border-style: solid;
-  padding: 5px 14px;
-  font-size: 12px;
+  padding: 4px 11px;
+  font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: default;
@@ -1128,7 +1187,7 @@ body {
   overflow: hidden;
   border-radius: 28px;
   background: linear-gradient(145deg, #1A3049 0%, #1E4060 55%, var(--color-brand-ink) 100%);
-  padding: 36px 38px 38px;
+  padding: 28px 30px 30px;
   border: 1px solid rgba(111,152,190,0.12);
 }
 
@@ -1328,7 +1387,7 @@ body {
   border-radius: 24px;
   border: 1px solid #ECF1F7;
   background: #fff;
-  padding: 28px 30px;
+  padding: 22px 24px;
   flex: 1;
   box-shadow: 0 2px 12px rgba(30,53,80,0.04);
 }
@@ -1678,6 +1737,18 @@ body {
     animation: none !important;
     transition-duration: 120ms !important;
     transition-delay: 0s !important;
+  }
+
+  /* Segunda barrera del glow. El componente ya no monta el nodo, pero si la
+     preferencia cambia con la página abierta, esto lo apaga igual. */
+  .cursor-glow {
+    display: none !important;
+  }
+
+  /* El botón conserva el cambio de sombra (informa el hover) pero pierde el
+     filtro, que es puro adorno. */
+  .btn-glow:hover {
+    filter: none !important;
   }
 
   .scroll-reveal,

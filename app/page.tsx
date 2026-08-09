@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import CursorGlow from "@/components/CursorGlow";
 import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 /* ─── Datos ───────────────────────────────────────────────── */
@@ -14,11 +15,14 @@ const navLinks = [
   { label: "Contacto",  href: "#contacto" },
 ];
 
-const stats = [
-  { value: "Formación",         label: "Y experiencia especializada " },
-  { value: "100%",        label: "Confidencialidad garantizada" },
-  { value: "Presencial",     label: "y disponibilidad Virtual" },
-  { value: "Colegiada",   label: "Col. Psicólogos de Guatemala" },
+/* Antes eran dos bloques con el mismo mensaje: tres "trust pills" en el hero y
+   una franja de stats 300px más abajo. Fusionados acá; los cuatro datos reales
+   sobreviven, uno por píldora. */
+const trustPills = [
+  "Colegiada · Col. Psicólogos de Guatemala",
+  "Confidencialidad garantizada",
+  "Presencial y virtual",
+  "Formación especializada",
 ];
 
 const treatmentTags = [
@@ -60,7 +64,7 @@ const tagColors: Record<string, string> = {
   teal:   "bg-tag-teal-bg text-tag-teal-fg border-tag-teal-line",
   green:  "bg-tag-green-bg text-tag-green-fg border-tag-green-line",
   amber:  "bg-tag-amber-bg text-tag-amber-fg border-tag-amber-line",
-  slate:  "bg-slate-50 text-slate-500 border-slate-200",
+  slate:  "bg-slate-50 text-slate-600 border-slate-200",
 };
 
 const portalFeatures = [
@@ -193,10 +197,18 @@ export default function Home() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("in-view");
+          if (!e.isIntersecting) return;
+          e.target.classList.add("in-view");
+          // Ya revelado: dejar de observarlo. Antes los 31 elementos seguían
+          // observados toda la sesión.
+          observer.unobserve(e.target);
         });
       },
-      { threshold: 0.07 }
+      // El margen negativo abajo encoge la zona de disparo: el elemento se
+      // revela cuando ya entró de verdad, no cuando asoma un pixel. Por eso
+      // el threshold baja a 0: acumular las dos restricciones podría dejar
+      // algo sin revelarse nunca.
+      { threshold: 0, rootMargin: "0px 0px -12% 0px" }
     );
     targets.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
@@ -219,6 +231,12 @@ export default function Home() {
       >
         Saltar al contenido
       </a>
+
+      {/* Glow ambiental del cursor. Es position: fixed, así que su lugar en
+          el árbol no cambia dónde se dibuja; va acá para que exista solo en
+          la landing y no en los portales. En touch o con "reducir
+          movimiento" el componente no renderiza nada. */}
+      <CursorGlow />
 
       {/* ══════════════════════════════════════
           HEADER
@@ -275,7 +293,7 @@ export default function Home() {
               type="button"
               onClick={() => setMenuOpen(false)}
               aria-label="Cerrar menú"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200/80 bg-white/80 text-slate-500 shadow-sm transition-all duration-200 hover:border-brand/30 hover:text-brand hover:shadow-md active:scale-95"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm transition-all duration-200 hover:border-brand/30 hover:text-brand hover:shadow-md active:scale-95"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             </button>
@@ -284,7 +302,7 @@ export default function Home() {
           {/* Saludo */}
           <div className="relative px-6 pt-5 pb-2">
             <p className="text-sm font-medium text-slate-800">Bienvenido/a</p>
-            <p className="mt-0.5 text-xs text-slate-500">Explora los servicios de Psicobienestar</p>
+            <p className="mt-0.5 text-xs text-slate-600">Explora los servicios de Psicobienestar</p>
           </div>
 
           {/* Navegación */}
@@ -317,7 +335,7 @@ export default function Home() {
                   onClick={() => setMenuOpen(false)}
                   className="mobile-link group flex items-center gap-3 rounded-2xl border border-transparent px-3.5 py-3.5 text-[15px] font-medium text-slate-700 hover:border-brand/10 hover:bg-brand-tint/60 hover:text-brand hover:shadow-sm active:scale-[0.98]"
                 >
-                  <span className={`mobile-link-icon ${iconBgs[label] ?? "bg-slate-100 text-slate-500"}`}>
+                  <span className={`mobile-link-icon ${iconBgs[label] ?? "bg-slate-100 text-slate-600"}`}>
                     {icons[label] ?? null}
                   </span>
                   <span className="flex-1">{label}</span>
@@ -333,13 +351,13 @@ export default function Home() {
             <a
               href="/login"
               onClick={() => setMenuOpen(false)}
-              className="mobile-link group flex items-center gap-3 rounded-2xl border border-transparent px-3.5 py-3 text-sm text-slate-500 hover:border-brand/10 hover:bg-brand-tint/60 hover:text-brand active:scale-[0.98]"
+              className="mobile-link group flex items-center gap-3 rounded-2xl border border-transparent px-3.5 py-3 text-sm text-slate-600 hover:border-brand/10 hover:bg-brand-tint/60 hover:text-brand active:scale-[0.98]"
             >
-              <span className="mobile-link-icon bg-slate-100 text-slate-500">
+              <span className="mobile-link-icon bg-slate-100 text-slate-600">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               </span>
               <span className="flex-1">Portal del paciente</span>
-              <span className="mobile-link-arrow bg-slate-100 text-slate-500">
+              <span className="mobile-link-arrow bg-slate-100 text-slate-600">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </span>
             </a>
@@ -350,13 +368,13 @@ export default function Home() {
             <a
               href="#contacto"
               onClick={() => setMenuOpen(false)}
-              className="mobile-cta flex items-center justify-center gap-2 w-full rounded-2xl py-4 text-[15px] font-semibold text-white shadow-[0_8px_28px_rgba(30,90,133,0.30)] active:scale-[0.98]"
+              className="btn-glow flex items-center justify-center gap-2 w-full rounded-2xl py-4 text-[15px] font-semibold text-white active:scale-[0.98]"
               style={{ background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)" }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="square"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Agendar cita
             </a>
-            <p className="mt-3 text-center text-[11px] text-slate-500">
+            <p className="mt-3 text-center text-[11px] text-slate-600">
               Consulta presencial y virtual en Guatemala
             </p>
           </div>
@@ -414,7 +432,7 @@ export default function Home() {
               </h1>
 
               {/* Subtítulo */}
-              <p className="hero-subtitle mt-6 max-w-lg text-lg leading-8 text-slate-500 [text-wrap:balance]">
+              <p className="hero-subtitle mt-6 max-w-lg text-lg leading-8 text-slate-600 [text-wrap:balance]">
                 Acompañamiento psicológico profesional, humano y confidencial con la{" "}
                 <span className="font-semibold text-slate-700">
                   Lic. María Eugenia Castillo García.
@@ -426,7 +444,7 @@ export default function Home() {
               <div className="hero-cta mt-9 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#contacto"
-                  className="btn-shimmer inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white shadow-[0_6px_24px_rgba(30,90,133,0.32)] transition-all duration-200 hover:scale-[1.04]"
+                  className="btn-glow inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white"
                   style={{ background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -442,10 +460,10 @@ export default function Home() {
 
               {/* Trust pills */}
               <div className="hero-stats mt-8 flex flex-wrap gap-2">
-                {["Colegiada activa", "Confidencial 100%", "Presencial & Virtual"].map((item) => (
+                {trustPills.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[11px] font-medium text-slate-500"
+                    className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[11px] font-medium text-slate-600"
                   >
                     {item}
                   </span>
@@ -453,7 +471,7 @@ export default function Home() {
               </div>
 
               <div className="hero-cta mt-3">
-                <a href="/doctor-login" className="text-[11px] text-slate-500 underline-offset-4 transition hover:text-slate-600 hover:underline">
+                <a href="/doctor-login" className="text-[11px] text-slate-600 underline-offset-4 transition hover:text-slate-600 hover:underline">
                   Acceso para profesionales
                 </a>
               </div>
@@ -512,28 +530,9 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════
-          STATS STRIP
-      ══════════════════════════════════════ */}
-      <section className="border-y border-slate-100 bg-slate-50/60">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-2 divide-x divide-slate-100 md:grid-cols-4">
-            {stats.map((s, i) => (
-              <div
-                key={i}
-                className="stagger-reveal flex flex-col items-center px-6 py-8 text-center"
-              >
-                <p className="text-2xl font-bold text-brand lg:text-3xl">{s.value}</p>
-                <p className="mt-1.5 text-[11px] font-medium text-slate-500 [text-wrap:balance]">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
           SOBRE MÍ
       ══════════════════════════════════════ */}
-      <section id="sobre-mi" className="bg-white py-24 lg:py-36">
+      <section id="sobre-mi" className="bg-white py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid items-center gap-16 lg:grid-cols-2">
 
@@ -579,16 +578,16 @@ export default function Home() {
               <h2 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-slate-900 [text-wrap:balance] sm:text-5xl">
                 Lic. María Eugenia<br className="hidden sm:block" /> Castillo García
               </h2>
-              <p className="mt-2 text-base font-medium text-brand-muted">
+              <p className="mt-2 text-base font-medium text-brand-muted-ink">
                 Psicóloga Clínica · Psicobienestar-Renovati, Guatemala
               </p>
-              <p className="mt-6 text-base leading-8 text-slate-500 [text-wrap:balance]">
+              <p className="mt-6 text-base leading-8 text-slate-600 [text-wrap:balance]">
                 Soy psicóloga clínica colegiada, con formación en psicología clínica y
                 actualmente cursando una especialización en Neuropsicología. Mi práctica
                 está orientada a ofrecer un acompañamiento genuino, profesional y
                 profundamente humano.
               </p>
-              <p className="mt-4 text-base leading-8 text-slate-500 [text-wrap:balance]">
+              <p className="mt-4 text-base leading-8 text-slate-600 [text-wrap:balance]">
                 Trabajo en{" "}
                 <span className="font-semibold text-slate-800">Psicobienestar-Renovati</span>
                 , atendiendo de forma presencial y virtual con la misma dedicación y
@@ -601,7 +600,7 @@ export default function Home() {
                   <div
                     key={i}
                     className="stagger-reveal rounded-[18px] border border-slate-100 bg-slate-50/80 p-4"
-                    style={{ transitionDelay: `${i * 0.07}s` }}
+                    style={{ "--reveal-i": i } as React.CSSProperties}
                   >
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">{c.label}</p>
                     <p className="mt-1 text-sm font-semibold text-slate-800">{c.value}</p>
@@ -611,44 +610,29 @@ export default function Home() {
 
               <a
                 href="#contacto"
-                className="btn-shimmer mt-8 inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white shadow-[0_6px_24px_rgba(30,90,133,0.25)] transition-all duration-200 hover:scale-[1.04]"
+                className="btn-glow mt-8 inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white"
                 style={{ background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)" }}
               >
                 Agendar sesión <span aria-hidden>→</span>
               </a>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ══════════════════════════════════════
-          POR QUÉ ELEGIRME — numerado (01 02 03)
-      ══════════════════════════════════════ */}
-      <section className="bg-slate-50/70 py-24 lg:py-36">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-
-          {/* Header */}
-          <div className="scroll-reveal mb-16 flex flex-col items-start gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <span className="inline-block rounded-full bg-white border border-slate-200 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">
-                ¿Por qué elegirme?
-              </span>
-              <h2 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 [text-wrap:balance] sm:text-5xl">
-                Un acompañamiento que<br className="hidden md:block" /> marca la diferencia
-              </h2>
-            </div>
-            <p className="max-w-sm text-base leading-7 text-slate-500 [text-wrap:balance] lg:text-right">
+          {/* Beneficios: eran una sección propia con su propia cabecera. Los
+              tres argumentos son sobre la doctora, así que viven acá. El
+              párrafo de intro se conserva como texto, no como encabezado:
+              esta sección ya tiene su h2 y no debe competir. */}
+          <div className="mt-14">
+            <p className="scroll-reveal mx-auto mb-8 max-w-2xl text-center text-base leading-7 text-slate-600 [text-wrap:balance]">
               Ciencia, calidez y compromiso real con tu proceso de bienestar emocional.
             </p>
-          </div>
 
-          {/* Items numerados */}
-          <div className="grid gap-px bg-slate-200 overflow-hidden rounded-[28px] border border-slate-200 md:grid-cols-3">
+            <div className="grid gap-px bg-slate-200 overflow-hidden rounded-[28px] border border-slate-200 md:grid-cols-3">
             {benefits.map((b, i) => (
               <div
                 key={i}
                 className="stagger-reveal portal-card-hover group flex flex-col bg-white p-8 lg:p-10"
-                style={{ transitionDelay: `${i * 0.10}s` }}
+                style={{ "--reveal-i": i } as React.CSSProperties}
               >
                 {/* Número grande */}
                 <span
@@ -658,7 +642,7 @@ export default function Home() {
                   {b.num}
                 </span>
                 <h3 className="text-lg font-bold leading-snug text-slate-900">{b.title}</h3>
-                <p className="mt-3 flex-1 text-sm leading-7 text-slate-500">{b.description}</p>
+                <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{b.description}</p>
                 {/* Línea animada en hover */}
                 <div
                   className="mt-6 h-[2px] w-8 rounded-full transition-all duration-500 group-hover:w-full"
@@ -666,71 +650,67 @@ export default function Home() {
                 />
               </div>
             ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
-          SERVICIOS — secciones alternadas zigzag
+          SERVICIOS — modalidades en grid
       ══════════════════════════════════════ */}
-      <section id="servicios" className="bg-white py-24 lg:py-36">
+      <section id="servicios" className="bg-white py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
           {/* Header */}
-          <div className="scroll-reveal mb-20 text-center">
+          <div className="scroll-reveal mb-12 text-center">
             <span className="inline-block rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">
               Servicios
             </span>
             <h2 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 [text-wrap:balance] sm:text-5xl">
               Atención adaptada a ti
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-slate-500 [text-wrap:balance]">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-slate-600 [text-wrap:balance]">
               Cada proceso terapéutico es único. Ofrezco distintas modalidades para
               que encuentres el acompañamiento que mejor se ajuste a tu momento de vida.
             </p>
           </div>
 
-          {/* Zigzag */}
-          <div className="flex flex-col gap-10">
+          {/* Grid de modalidades: 1 columna hasta lg, 3 en desktop */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {services.map((s, i) => (
               <div
                 key={i}
-                className={`scroll-reveal grid items-center gap-10 overflow-hidden rounded-[32px] border border-slate-100 bg-slate-50/60 p-1 lg:grid-cols-2 ${
-                  i % 2 === 1 ? "slide-right" : "slide-left"
-                }`}
+                style={{ "--reveal-i": i } as React.CSSProperties}
+                className="scroll-reveal flex flex-col overflow-hidden rounded-[32px] border border-slate-100 bg-slate-50/60 p-1"
               >
                 {/* Visual */}
-                <div
-                  className={`relative h-64 overflow-hidden rounded-[28px] lg:h-full lg:min-h-[280px] ${
-                    i % 2 === 1 ? "lg:order-2" : "lg:order-1"
-                  }`}
-                >
+                <div className="relative aspect-[16/10] overflow-hidden rounded-[28px]">
                   <Image
                     src={s.image}
                     alt={s.alt}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    sizes="(max-width: 1024px) 100vw, (max-width: 1279px) 33vw, 400px"
                   />
                 </div>
 
                 {/* Texto */}
-                <div className={`px-6 py-8 lg:px-8 lg:py-10 ${i % 2 === 1 ? "lg:order-1" : "lg:order-2"}`}>
-                  <span className="inline-block rounded-full bg-brand-tint px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">
+                <div className="flex flex-1 flex-col px-6 py-7 lg:px-7 lg:py-8">
+                  <span className="inline-block self-start rounded-full bg-brand-tint px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">
                     {s.tag}
                   </span>
-                  <h3 className="mt-4 text-2xl font-bold leading-snug text-slate-900 [text-wrap:balance] sm:text-3xl">
+                  <h3 className="mt-4 text-2xl font-bold leading-snug text-slate-900 [text-wrap:balance]">
                     {s.title}
                   </h3>
-                  <p className="mt-4 text-[15px] leading-8 text-slate-500 [text-wrap:balance]">
+                  <p className="mt-3 flex-1 text-[15px] leading-7 text-slate-600 [text-wrap:balance]">
                     {s.description}
                   </p>
-                  <p className="mt-4 text-[11px] font-semibold uppercase tracking-widest text-brand-muted">
+                  <p className="mt-4 text-[11px] font-semibold uppercase tracking-widest text-brand-muted-ink">
                     {s.detail}
                   </p>
                   <a
                     href="#contacto"
-                    className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-all duration-200 hover:gap-3"
+                    className="mt-5 inline-flex items-center gap-1.5 self-start text-sm font-semibold text-brand transition-all duration-200 hover:gap-3"
                   >
                     Agendar sesión <span aria-hidden>→</span>
                   </a>
@@ -744,24 +724,24 @@ export default function Home() {
       {/* ══════════════════════════════════════
           ÁREAS + PORTAL + INFO
       ══════════════════════════════════════ */}
-      <section className="bg-slate-50/60 py-20 lg:py-28">
+      <section className="bg-slate-50/60 py-14 lg:py-20">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
           {/* Header */}
-          <div className="scroll-reveal mb-12 text-center">
+          <div className="scroll-reveal mb-8 text-center">
             <span className="inline-block rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand">
               Áreas de acompañamiento
             </span>
             <h2 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl [text-wrap:balance]">
               ¿En qué puedo acompañarte?
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-slate-500">
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-slate-600">
               Trabajo con adultos y adultos mayores que atraviesan dificultades emocionales, ofreciendo un espacio seguro, empático y personalizado.
             </p>
           </div>
 
           {/* Tags de tratamientos */}
-          <div className="scroll-reveal mb-14 flex flex-wrap justify-center gap-2">
+          <div className="scroll-reveal mb-10 flex flex-wrap justify-center gap-1.5">
             {treatmentTags.map(({ label, cat }) => (
               <span
                 key={label}
@@ -789,7 +769,7 @@ export default function Home() {
                   Accede a tu proceso terapéutico de forma digital, segura y desde cualquier dispositivo.
                 </p>
 
-                <ul className="mt-7 space-y-2.5">
+                <ul className="mt-5 space-y-2">
                   {portalFeatures.map(feat => (
                     <li key={feat} className="portal-benefit-feature">
                       <span className="portal-benefit-check" aria-hidden>✓</span>
@@ -844,7 +824,7 @@ export default function Home() {
                       <span className="mt-0.5 shrink-0 text-brand">◆</span>
                       <span>Maestría en Neuropsicología Aplicada <em>(en curso)</em> — Universidad del Valle de Guatemala</span>
                     </li>
-                    <li className="flex gap-3 text-sm leading-5 text-slate-500">
+                    <li className="flex gap-3 text-sm leading-5 text-slate-600">
                       <span className="mt-0.5 shrink-0">◇</span>
                       <span>N.º Colegiado: <strong className="text-slate-600">17538</strong></span>
                     </li>
@@ -858,7 +838,7 @@ export default function Home() {
                   <div>
                     <p className="info-benefit-label">Tarifa por sesión</p>
                     <p className="mt-1 text-[2.2rem] font-bold tracking-tight text-slate-900">Q 300</p>
-                    <p className="mt-0.5 text-xs text-slate-500">Cita previa · horarios flexibles</p>
+                    <p className="mt-0.5 text-xs text-slate-600">Cita previa · horarios flexibles</p>
                   </div>
                   <div className="price-icon-box">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -874,7 +854,7 @@ export default function Home() {
                   </svg>
                   <div>
                     <p className="text-sm font-semibold text-slate-800">2da calle 6-24, Edificio RENOVATI</p>
-                    <p className="text-xs text-slate-500">Zona 10, Ciudad de Guatemala</p>
+                    <p className="text-xs text-slate-600">Zona 10, Ciudad de Guatemala</p>
                     <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 text-[11px] font-medium text-brand">
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-muted" />
                       También disponible en línea
@@ -894,7 +874,7 @@ export default function Home() {
                       </svg>
                     </div>
                     <p className="text-sm font-semibold text-slate-800">Edificio RENOVATI · Zona 10</p>
-                    <p className="text-xs text-slate-500">Ciudad de Guatemala</p>
+                    <p className="text-xs text-slate-600">Ciudad de Guatemala</p>
                   </div>
                 </div>
 
@@ -1002,7 +982,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           CONTACTO
       ══════════════════════════════════════ */}
-      <section id="contacto" className="bg-white py-24 lg:py-36">
+      <section id="contacto" className="bg-white py-16 lg:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
 
@@ -1014,7 +994,7 @@ export default function Home() {
               <h2 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 [text-wrap:balance] sm:text-5xl">
                 Da el primer paso hoy
               </h2>
-              <p className="mt-5 text-base leading-8 text-slate-500 [text-wrap:balance]">
+              <p className="mt-5 text-base leading-8 text-slate-600 [text-wrap:balance]">
                 Agenda tu primera sesión y comienza tu proceso de bienestar emocional.
                 Respondo todos los mensajes con discreción y prontitud.
               </p>
@@ -1042,8 +1022,12 @@ export default function Home() {
                     label: "Horario",
                     value: "Lunes a viernes · 9:00 AM – 6:00 PM",
                   },
-                ].map(({ icon, label, value }) => (
-                  <div key={label} className="stagger-reveal flex items-start gap-4">
+                ].map(({ icon, label, value }, i) => (
+                  <div
+                    key={label}
+                    style={{ "--reveal-i": i } as React.CSSProperties}
+                    className="stagger-reveal flex items-start gap-4"
+                  >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 text-brand">
                       {icon}
                     </div>
@@ -1066,7 +1050,7 @@ export default function Home() {
                   href="https://wa.me/50243123394"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand transition-all duration-200 hover:scale-[1.04]"
+                  className="btn-glow btn-glow--on-dark mt-5 inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-brand"
                 >
                   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
@@ -1078,7 +1062,7 @@ export default function Home() {
               {/* Nota seguridad */}
               <div className="mt-4 rounded-[18px] border border-slate-100 bg-slate-50 p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Nota importante</p>
-                <p className="mt-2 text-sm leading-6 text-slate-500 [text-wrap:balance]">
+                <p className="mt-2 text-sm leading-6 text-slate-600 [text-wrap:balance]">
                   Este espacio es de apoyo, no de emergencia. Si estás en crisis, comunícate con los servicios de salud de tu localidad.
                 </p>
               </div>
@@ -1088,7 +1072,7 @@ export default function Home() {
             <div className="scroll-reveal slide-right">
               <div className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-[0_24px_60px_rgba(15,23,42,0.05)] lg:p-10">
                 <h3 className="text-xl font-bold text-slate-900">Solicitar una cita</h3>
-                <p className="mt-1 text-sm text-slate-500">Respondo en menos de 24 horas.</p>
+                <p className="mt-1 text-sm text-slate-600">Respondo en menos de 24 horas.</p>
 
                 <form className="mt-8 space-y-4" onSubmit={handleFormSubmit}>
                   <div>
@@ -1150,7 +1134,7 @@ export default function Home() {
 
                   <button
                     type="submit"
-                    className="btn-shimmer flex w-full items-center justify-center gap-2 rounded-[14px] py-4 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(30,90,133,0.25)] transition-all duration-200 hover:scale-[1.01]"
+                    className="btn-glow flex w-full items-center justify-center gap-2 rounded-[14px] py-4 text-sm font-semibold text-white"
                     style={{ background: "linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-bright) 100%)" }}
                   >
                     <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -1159,7 +1143,7 @@ export default function Home() {
                     Enviar por WhatsApp
                   </button>
 
-                  <p className="text-center text-xs text-slate-500">
+                  <p className="text-center text-xs text-slate-600">
                     Tu información es confidencial y nunca será compartida.
                   </p>
                 </form>
@@ -1178,7 +1162,7 @@ export default function Home() {
           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(111,152,190,0.30) 40%, rgba(111,152,190,0.20) 60%, transparent 100%)" }}
         />
 
-        <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
           <div className="grid gap-12 lg:grid-cols-[2fr_1fr_1.5fr]">
 
             {/* Columna Brand */}
@@ -1237,7 +1221,7 @@ export default function Home() {
 
             {/* Columna Links */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted">Links rápidos</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted-soft">Links rápidos</p>
               <nav className="mt-5 space-y-3">
                 {[
                   { label: "Inicio",           href: "#inicio" },
@@ -1260,7 +1244,7 @@ export default function Home() {
 
             {/* Columna Contacto */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted">Información de contacto</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted-soft">Información de contacto</p>
               <div className="mt-5 space-y-5">
                 {[
                   {
