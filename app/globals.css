@@ -530,6 +530,173 @@ body {
   100% { left: 120%; }
 }
 
+/* ===================== FOOTER ===================== */
+
+.footer-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(143, 178, 207, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 18px 20px;
+  transition: border-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Mismo lenguaje que .btn-glow--on-dark: luz, no desplazamiento. */
+.footer-card:hover {
+  border-color: rgba(143, 178, 207, 0.42);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 26px 2px rgb(255 255 255 / 0.06);
+}
+
+.footer-card:focus-visible {
+  outline: 2px solid var(--color-brand-muted-soft);
+  outline-offset: 3px;
+}
+
+.footer-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  width: 42px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: rgba(143, 178, 207, 0.12);
+  color: var(--color-brand-muted-soft);
+}
+
+.footer-card-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-brand-muted-soft); /* 4.79:1 sobre el fondo de tarjeta */
+}
+
+.footer-card-value {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff; /* 10.55:1 */
+  overflow-wrap: anywhere; /* el correo largo no rompe la tarjeta */
+}
+
+.footer-card-arrow {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.35);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 240ms ease,
+              transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-card:hover .footer-card-arrow,
+.footer-card:focus-visible .footer-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Las tres redes tenían cada una su color de marca con gradiente y scale.
+   Sobre el navy competían entre sí; ahora comparten el lenguaje del sistema. */
+.footer-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(143, 178, 207, 0.20);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-brand-muted-soft);
+  transition: border-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              color 240ms ease;
+}
+
+.footer-social:hover {
+  border-color: rgba(143, 178, 207, 0.50);
+  color: #ffffff;
+  box-shadow: 0 0 22px 2px rgb(255 255 255 / 0.07);
+}
+
+/* ===================== FORMULARIO DE CONTACTO ===================== */
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569; /* slate-600 — 7.32:1 sobre blanco */
+}
+
+.form-input {
+  width: 100%;
+  border-radius: 14px;
+  /* WCAG 1.4.11 pide 3:1 para identificar un componente de UI. El
+     slate-200 que había daba 1.23:1 contra el blanco de la tarjeta, y el
+     fondo del campo tampoco ayudaba (1.05:1): el campo se distinguía casi
+     solo por su label. #7C8A9C da 3.46:1 — el borde más liviano que cumple. */
+  border: 1px solid #7c8a9c;
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1e293b;
+  transition: border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* El placeholder por defecto del navegador da 4.32:1 sobre este fondo y
+   falla AA. Firefox además le aplica opacity 0.54 por su cuenta. */
+.form-input::placeholder {
+  color: #475569;
+  opacity: 1;
+}
+
+/* Mismo lenguaje que .btn-glow: el campo se enciende al enfocarse.
+   El outline transparente NO es decorativo — en modo de alto contraste
+   forzado los box-shadow se descartan y el outline es lo único que queda. */
+.form-input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: var(--color-brand);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgb(30 90 133 / 0.20),
+              0 0 22px 2px rgb(30 90 133 / 0.20);
+}
+
+.form-help {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.form-progress {
+  position: relative;
+  height: 4px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.form-progress-fill {
+  display: block;
+  height: 100%;
+  transform-origin: left;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-brand), var(--color-brand-bright));
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ===================== BOTÓN: RESPLANDOR DESDE EL BORDE ===================== */
 
 /*
@@ -1494,6 +1661,35 @@ body {
   transform: scaleX(1);
 }
 
+/* Revelado por líneas de la cita. Cada línea vive en una máscara que la
+   recorta; al entrar en vista sube desde abajo, escalonadas por --reveal-i. */
+.quote-line-mask {
+  display: block;
+  overflow: hidden;
+}
+
+.quote-line-mask > span {
+  display: block;
+  transform: translateY(105%);
+  transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(0.45s + var(--reveal-i, 0) * 90ms);
+}
+
+.scroll-reveal.in-view .quote-line-mask > span {
+  transform: translateY(0);
+}
+
+/* Hover de las tarjetas: mismo lenguaje que .btn-glow — luz, no movimiento. */
+.quote-stat-card {
+  transition: border-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quote-stat-card:hover {
+  border-color: rgba(143, 178, 207, 0.45);
+  box-shadow: 0 0 28px 2px rgb(255 255 255 / 0.07);
+}
+
 /* Texto de la cita */
 .quote-text {
   font-size: clamp(1.55rem, 3.5vw, 2.15rem);
@@ -1519,7 +1715,9 @@ body {
   font-weight: 600;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(111, 152, 190, 0.55);
+  /* Era rgba(111,152,190,0.55) = 2.26:1 sobre el navy. Es el nombre de la
+     profesional: tiene que leerse. */
+  color: var(--color-brand-muted-soft);
   opacity: 0;
   transition: opacity 0.9s ease 0.85s;
 }
@@ -1751,6 +1949,11 @@ body {
     filter: none !important;
   }
 
+  /* OJO: .form-progress-fill NO entra en la lista de transform:none de abajo.
+     Su transform ES el dato — forzarlo a none mostraría la barra siempre
+     llena, mintiendo sobre el estado del formulario. El transition-duration
+     global de 120ms ya la vuelve prácticamente instantánea. */
+
   .scroll-reveal,
   .stagger-reveal,
   .quote-text,
@@ -1758,8 +1961,19 @@ body {
   .quote-dots,
   .quote-stat-card,
   .quote-cta-btn,
-  .quote-line {
+  .quote-line,
+  /* Sin esto la cita queda INVISIBLE: sus líneas arrancan en translateY(105%),
+     fuera de una máscara con overflow:hidden. Matar la transición sin forzar
+     el estado final las deja desplazadas para siempre. */
+  .quote-line-mask > span {
     opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* La flecha de las tarjetas del footer NO entra en la lista de arriba: su
+     opacity 0 en reposo es el estado correcto, no un reveal roto. Lo que se
+     elimina es el desplazamiento, no la aparición en hover. */
+  .footer-card-arrow {
     transform: none !important;
   }
 }

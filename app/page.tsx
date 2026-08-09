@@ -152,6 +152,12 @@ export default function Home() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  // Progreso del formulario. Derivado, sin estado ni efecto nuevos.
+  // Son 3 y no 4: modalidad arranca con valor, e incluirla mostraría
+  // "1 de 4" con el formulario todavía vacío.
+  const camposLlenos = [formData.nombre, formData.correo, formData.mensaje]
+    .filter((v) => v.trim() !== "").length;
+
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     const text = [
@@ -920,6 +926,9 @@ export default function Home() {
         {/* Glow ambiental sutil */}
         <div className="quote-glow" aria-hidden />
 
+        {/* Comilla tipográfica de fondo. El CSS ya existía sin usarse. */}
+        <div className="quote-mark-bg" aria-hidden>&rdquo;</div>
+
         <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid items-center gap-10 lg:grid-cols-2">
 
@@ -927,9 +936,19 @@ export default function Home() {
             <div className="scroll-reveal slide-left text-center lg:text-left">
               <div className="quote-line mb-7 lg:ml-0" />
               <blockquote>
+                {/* Mismo texto, revelado por líneas. Cada línea es su propia
+                    máscara para que suban escalonadas. */}
                 <p className="quote-text !text-left-on-lg">
-                  "Pedir ayuda no es debilidad.
-                  Es el primer paso hacia una vida más plena."
+                  <span className="quote-line-mask">
+                    <span style={{ "--reveal-i": 0 } as React.CSSProperties}>
+                      &ldquo;Pedir ayuda no es debilidad.
+                    </span>
+                  </span>
+                  <span className="quote-line-mask">
+                    <span style={{ "--reveal-i": 1 } as React.CSSProperties}>
+                      Es el primer paso hacia una vida más plena.&rdquo;
+                    </span>
+                  </span>
                 </p>
               </blockquote>
               <p className="quote-author mt-5">
@@ -947,19 +966,19 @@ export default function Home() {
             <div className="scroll-reveal slide-right grid grid-cols-2 gap-3">
 
               {/* Pacientes */}
-              <div className="quote-stat-card">
+              <div className="quote-stat-card" style={{ "--reveal-i": 0 } as React.CSSProperties}>
                 <p className="quote-stat-value">Atención</p>
                 <p className="quote-stat-label">Personalizada</p>
               </div>
 
               {/* Confidencialidad */}
-              <div className="quote-stat-card">
+              <div className="quote-stat-card" style={{ "--reveal-i": 1 } as React.CSSProperties}>
                 <p className="quote-stat-value">100%</p>
                 <p className="quote-stat-label">Confidencialidad garantizada</p>
               </div>
 
               {/* Estado en vivo */}
-              <div className="quote-stat-card quote-stat-card--live">
+              <div className="quote-stat-card quote-stat-card--live" style={{ "--reveal-i": 2 } as React.CSSProperties}>
                 <div className="quote-stat-live">
                   <span className="quote-stat-live-dot" />
                   <span className="quote-stat-live-text">Disponible</span>
@@ -969,7 +988,7 @@ export default function Home() {
               </div>
 
               {/* Colegiada */}
-              <div className="quote-stat-card">
+              <div className="quote-stat-card" style={{ "--reveal-i": 3 } as React.CSSProperties}>
                 <p className="quote-stat-value text-[1.1rem]">Colegiada</p>
                 <p className="quote-stat-label">Col. Psicólogos de Guatemala</p>
               </div>
@@ -1074,23 +1093,44 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-slate-900">Solicitar una cita</h3>
                 <p className="mt-1 text-sm text-slate-600">Respondo en menos de 24 horas.</p>
 
+                {/* Progreso: barra + texto. El texto es el canal no-cromático;
+                    role=progressbar deja que un lector de pantalla lo consulte
+                    sin ser interrumpido en cada tecla. */}
+                <div className="mt-5 flex items-center gap-3">
+                  <div
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={3}
+                    aria-valuenow={camposLlenos}
+                    aria-label="Campos completos del formulario"
+                    className="form-progress"
+                  >
+                    <span
+                      className="form-progress-fill"
+                      style={{ transform: `scaleX(${camposLlenos / 3})` }}
+                    />
+                  </div>
+                  <p className="shrink-0 text-xs font-medium text-slate-600">
+                    {camposLlenos} de 3
+                  </p>
+                </div>
+
                 <form className="mt-8 space-y-4" onSubmit={handleFormSubmit}>
                   <div>
-                    <label htmlFor="contacto-nombre" className="mb-1.5 block text-sm font-medium text-slate-600">Nombre completo</label>
+                    <label htmlFor="contacto-nombre" className="form-label">Nombre completo</label>
                     <input
                       id="contacto-nombre"
                       type="text"
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleFormChange}
-                      placeholder="Tu nombre"
                       required
-                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/40"
+                      className="form-input"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="contacto-correo" className="mb-1.5 block text-sm font-medium text-slate-600">Correo electrónico</label>
+                    <label htmlFor="contacto-correo" className="form-label">Correo electrónico</label>
                     <input
                       id="contacto-correo"
                       type="email"
@@ -1098,19 +1138,23 @@ export default function Home() {
                       value={formData.correo}
                       onChange={handleFormChange}
                       placeholder="tu@correo.com"
+                      aria-describedby="ayuda-correo"
                       required
-                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/40"
+                      className="form-input"
                     />
+                    <p id="ayuda-correo" className="form-help">
+                      Para enviarte la confirmación de la cita.
+                    </p>
                   </div>
 
                   <div>
-                    <label htmlFor="contacto-modalidad" className="mb-1.5 block text-sm font-medium text-slate-600">Modalidad de preferencia</label>
+                    <label htmlFor="contacto-modalidad" className="form-label">Modalidad de preferencia</label>
                     <select
                       id="contacto-modalidad"
                       name="modalidad"
                       value={formData.modalidad}
                       onChange={handleFormChange}
-                      className="w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/40"
+                      className="form-input"
                     >
                       <option>Terapia individual – Presencial</option>
                       <option>Terapia individual – Virtual</option>
@@ -1120,16 +1164,20 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <label htmlFor="contacto-mensaje" className="mb-1.5 block text-sm font-medium text-slate-600">Mensaje</label>
+                    <label htmlFor="contacto-mensaje" className="form-label">Mensaje</label>
                     <textarea
                       id="contacto-mensaje"
                       rows={4}
                       name="mensaje"
                       value={formData.mensaje}
                       onChange={handleFormChange}
-                      placeholder="Cuéntame brevemente sobre lo que buscas o lo que estás viviendo..."
-                      className="w-full resize-none rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/40"
+                      aria-describedby="ayuda-mensaje"
+                      className="form-input resize-none"
                     />
+                    <p id="ayuda-mensaje" className="form-help">
+                      Cuéntame brevemente sobre lo que buscas o lo que estás viviendo.
+                      No hace falta que entres en detalle.
+                    </p>
                   </div>
 
                   <button
@@ -1163,10 +1211,54 @@ export default function Home() {
         />
 
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+
+          {/* Tres accesos directos. Son enlaces reales, no texto: mailto,
+              wa.me y la misma URL de Maps que usa la sección de ubicación. */}
+          <div className="mb-12 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                href: "mailto:gt.psicobienestar@gmail.com",
+                label: "Correo",
+                value: "gt.psicobienestar@gmail.com",
+                externo: false,
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+              },
+              {
+                href: "https://wa.me/50243123394",
+                label: "WhatsApp",
+                value: "+502 4312 3394",
+                externo: true,
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
+              },
+              {
+                href: "https://www.google.com/maps/search/?api=1&query=Edificio+Renovati+Centro+M%C3%A9dico+Empresarial+Zona+10+Guatemala",
+                label: "Ubicación",
+                value: "Edificio RENOVATI · Zona 10",
+                externo: true,
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+              },
+            ].map(({ href, label, value, icon, externo }, i) => (
+              <a
+                key={label}
+                href={href}
+                {...(externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                style={{ "--reveal-i": i } as React.CSSProperties}
+                className="stagger-reveal footer-card group"
+              >
+                <span className="footer-card-icon" aria-hidden>{icon}</span>
+                <span className="min-w-0">
+                  <span className="footer-card-label">{label}</span>
+                  <span className="footer-card-value">{value}</span>
+                </span>
+                <span className="footer-card-arrow" aria-hidden>→</span>
+              </a>
+            ))}
+          </div>
+
           <div className="grid gap-12 lg:grid-cols-[2fr_1fr_1.5fr]">
 
             {/* Columna Brand */}
-            <div>
+            <div className="stagger-reveal" style={{ "--reveal-i": 0 } as React.CSSProperties}>
               <Image
                 src="/Logo%20original.svg"
                 alt="Psicobienestar"
@@ -1184,7 +1276,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl border border-pink-400/30 bg-gradient-to-br from-pink-500/20 to-purple-600/20 text-pink-300 shadow-md transition-all duration-300 hover:scale-110 hover:border-pink-400/70 hover:from-pink-500/40 hover:to-purple-600/40 hover:text-pink-200 hover:shadow-pink-500/20"
+                  className="footer-social"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5"/>
@@ -1198,7 +1290,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook"
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl border border-blue-400/30 bg-blue-500/20 text-blue-300 shadow-md transition-all duration-300 hover:scale-110 hover:border-blue-400/70 hover:bg-blue-500/40 hover:text-blue-200 hover:shadow-blue-500/20"
+                  className="footer-social"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
@@ -1210,7 +1302,7 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="WhatsApp"
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl border border-green-400/30 bg-green-500/20 text-green-300 shadow-md transition-all duration-300 hover:scale-110 hover:border-green-400/70 hover:bg-green-500/40 hover:text-green-200 hover:shadow-green-500/20"
+                  className="footer-social"
                 >
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
@@ -1220,7 +1312,7 @@ export default function Home() {
             </div>
 
             {/* Columna Links */}
-            <div>
+            <div className="stagger-reveal" style={{ "--reveal-i": 1 } as React.CSSProperties}>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted-soft">Links rápidos</p>
               <nav className="mt-5 space-y-3">
                 {[
@@ -1243,13 +1335,13 @@ export default function Home() {
             </div>
 
             {/* Columna Contacto */}
-            <div>
+            <div className="stagger-reveal" style={{ "--reveal-i": 2 } as React.CSSProperties}>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-muted-soft">Información de contacto</p>
               <div className="mt-5 space-y-5">
                 {[
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-                    label: "Correo",      value: "contacto@psicobienestar.gt",
+                    label: "Correo",      value: "gt.psicobienestar@gmail.com",
                   },
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
@@ -1257,7 +1349,7 @@ export default function Home() {
                   },
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-                    label: "Horario",    value: "Lun–Vie · 8:00 AM – 6:00 PM",
+                    label: "Horario",    value: "Lun–Vie · 9:00 AM – 6:00 PM",
                   },
                   {
                     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>,
