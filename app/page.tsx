@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import CursorGlow from "@/components/CursorGlow";
+import FloatingActions from "@/components/FloatingActions";
+import TiltCard from "@/components/TiltCard";
 import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 /* ─── Datos ───────────────────────────────────────────────── */
@@ -140,7 +142,6 @@ const WA_NUMBER = "50243123394";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
     correo: "",
@@ -170,25 +171,6 @@ export default function Home() {
     ].join("\n");
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
   }
-
-  useEffect(() => {
-    let frame = 0;
-    const apply = () => {
-      frame = 0;
-      // Booleano: solo re-renderiza al cruzar el umbral, no en cada scroll.
-      setScrolled(window.scrollY > 50);
-    };
-    const onScroll = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(apply);
-    };
-    apply();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
 
   useEffect(() => {
     const targets = document.querySelectorAll(".scroll-reveal, .stagger-reveal");
@@ -253,18 +235,9 @@ export default function Home() {
         onOpenMenu={() => setMenuOpen(v => !v)}
       />
 
-      {/* ── Botón volver al inicio (móvil, aparece al hacer scroll) ── */}
-      {scrolled && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Volver al inicio"
-          className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white shadow-[0_6px_24px_rgba(30,90,133,0.35)] transition-all duration-300 hover:bg-brand-bright md:hidden"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-        </button>
-      )}
+      {/* Acciones flotantes. Incluye el "volver arriba", que antes vivía
+          suelto acá: comparten una sola columna para no solaparse. */}
+      <FloatingActions />
 
       {/* ── Menú móvil ── */}
       {/* Overlay oscuro */}
@@ -684,11 +657,15 @@ export default function Home() {
           {/* Grid de modalidades: 1 columna hasta lg, 3 en desktop */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {services.map((s, i) => (
+              // El .scroll-reveal usa transform para revelarse, así que el
+              // tilt vive en un elemento aparte: si escribiera el transform
+              // sobre el mismo nodo, pisaría el reveal.
               <div
                 key={i}
                 style={{ "--reveal-i": i } as React.CSSProperties}
-                className="scroll-reveal flex flex-col overflow-hidden rounded-[32px] border border-slate-100 bg-slate-50/60 p-1"
+                className="scroll-reveal"
               >
+                <TiltCard className="flex h-full flex-col overflow-hidden rounded-[32px] border border-slate-100 bg-slate-50/60 p-1">
                 {/* Visual */}
                 <div className="relative aspect-[16/10] overflow-hidden rounded-[28px]">
                   <Image
@@ -721,6 +698,7 @@ export default function Home() {
                     Agendar sesión <span aria-hidden>→</span>
                   </a>
                 </div>
+                </TiltCard>
               </div>
             ))}
           </div>
@@ -1018,8 +996,12 @@ export default function Home() {
                 Respondo todos los mensajes con discreción y prontitud.
               </p>
 
-              {/* Info items */}
-              <div className="mt-10 space-y-6">
+              {/* Info items. En tarjeta, con el mismo tratamiento que el
+                  formulario de al lado: antes era una pila suelta al lado de
+                  un contenedor con borde y sombra, y esa asimetría era lo que
+                  se veía desordenado. */}
+              <div className="mt-10 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.05)] lg:p-8">
+                <div className="space-y-6">
                 {[
                   {
                     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
@@ -1056,6 +1038,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
 
               {/* CTA WhatsApp */}
@@ -1212,49 +1195,10 @@ export default function Home() {
 
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
 
-          {/* Tres accesos directos. Son enlaces reales, no texto: mailto,
-              wa.me y la misma URL de Maps que usa la sección de ubicación. */}
-          <div className="mb-12 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                href: "mailto:gt.psicobienestar@gmail.com",
-                label: "Correo",
-                value: "gt.psicobienestar@gmail.com",
-                externo: false,
-                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-              },
-              {
-                href: "https://wa.me/50243123394",
-                label: "WhatsApp",
-                value: "+502 4312 3394",
-                externo: true,
-                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
-              },
-              {
-                href: "https://www.google.com/maps/search/?api=1&query=Edificio+Renovati+Centro+M%C3%A9dico+Empresarial+Zona+10+Guatemala",
-                label: "Ubicación",
-                value: "Edificio RENOVATI · Zona 10",
-                externo: true,
-                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-              },
-            ].map(({ href, label, value, icon, externo }, i) => (
-              <a
-                key={label}
-                href={href}
-                {...(externo ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                style={{ "--reveal-i": i } as React.CSSProperties}
-                className="stagger-reveal footer-card group"
-              >
-                <span className="footer-card-icon" aria-hidden>{icon}</span>
-                <span className="min-w-0">
-                  <span className="footer-card-label">{label}</span>
-                  <span className="footer-card-value">{value}</span>
-                </span>
-                <span className="footer-card-arrow" aria-hidden>→</span>
-              </a>
-            ))}
-          </div>
-
+          {/* Las tres tarjetas de acceso directo (correo, WhatsApp, mapa) se
+              eliminaron: el grupo flotante ofrece los mismos tres destinos y
+              está siempre visible. La columna "Información de contacto" de
+              más abajo conserva los datos. */}
           <div className="grid gap-12 lg:grid-cols-[2fr_1fr_1.5fr]">
 
             {/* Columna Brand */}
@@ -1269,43 +1213,33 @@ export default function Home() {
               <p className="mt-4 max-w-[290px] text-sm leading-7 text-white/75 [text-wrap:balance]">
                 Acompañamiento psicológico profesional, humano y confidencial. Presencial y virtual en Guatemala.
               </p>
-              <div className="mt-6 flex gap-3">
-                {/* Instagram */}
+              {/* Solo las dos redes que la consulta tiene realmente. El
+                  nombre va visible: deja de depender del aria-label para
+                  saber a dónde lleva cada enlace. WhatsApp no está acá —
+                  no es red social y ya vive en las tarjetas y los flotantes. */}
+              <div className="mt-6 flex flex-wrap gap-3">
                 <a
                   href="https://www.instagram.com/gt.psicobienestar?igsh=MW01YW55eWc1d3Z5bA=="
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="footer-social"
+                  className="footer-red"
                 >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <span>Instagram</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect x="2" y="2" width="20" height="20" rx="5"/>
                     <circle cx="12" cy="12" r="4.5"/>
                     <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
                   </svg>
                 </a>
-                {/* Facebook */}
                 <a
                   href="https://www.facebook.com/profile.php?id=61572835898177"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="footer-social"
+                  className="footer-red"
                 >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <span>Facebook</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-                  </svg>
-                </a>
-                {/* WhatsApp */}
-                <a
-                  href="https://wa.me/50243123394"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                  className="footer-social"
-                >
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
                   </svg>
                 </a>
               </div>

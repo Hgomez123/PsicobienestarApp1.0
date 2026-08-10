@@ -530,100 +530,164 @@ body {
   100% { left: 120%; }
 }
 
-/* ===================== FOOTER ===================== */
+/* ===================== ACCIONES FLOTANTES ===================== */
 
-.footer-card {
+/*
+  Columna fija abajo a la derecha. z-index 45: por encima del contenido y del
+  glow del cursor (40), por debajo del header (50) y del menú móvil (60).
+
+  El verde de marca de WhatsApp (#25D366) da 1.96:1 y no llega al 3:1 que
+  WCAG 1.4.11 pide para un componente de UI, así que el botón principal usa
+  el azul de marca (7.09:1). La jerarquía la marca el relleno, no el color
+  de la app.
+*/
+.fab-col {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.fab-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fab {
   display: flex;
   align-items: center;
-  gap: 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(143, 178, 207, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 18px 20px;
-  transition: border-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 260ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  justify-content: center;
+  height: 48px; /* por encima del mínimo táctil de 44px */
+  width: 48px;
+  border-radius: 9999px;
+  border: 1px solid #7c8a9c; /* 3.46:1 contra el blanco de la página */
+  background: #ffffff;
+  color: var(--color-brand); /* 7.09:1 */
+  box-shadow: 0 4px 14px rgb(30 90 133 / 0.18);
+  transition: box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Mismo lenguaje que .btn-glow--on-dark: luz, no desplazamiento. */
-.footer-card:hover {
-  border-color: rgba(143, 178, 207, 0.42);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 0 26px 2px rgb(255 255 255 / 0.06);
+/* Mismo lenguaje que .btn-glow: luz, no desplazamiento. */
+.fab:hover {
+  border-color: var(--color-brand);
+  box-shadow: 0 6px 18px rgb(30 90 133 / 0.24),
+              0 0 30px 3px rgb(30 90 133 / 0.28);
 }
 
-.footer-card:focus-visible {
-  outline: 2px solid var(--color-brand-muted-soft);
+.fab:focus-visible {
+  outline: 3px solid rgb(30 90 133 / 0.55);
   outline-offset: 3px;
 }
 
-.footer-card-icon {
-  display: flex;
+/* WhatsApp es la acción principal: relleno, no contorno. */
+.fab--wa {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.fab--wa:hover {
+  background: var(--color-brand-bright);
+  border-color: var(--color-brand-bright);
+}
+
+.fab--subir {
+  height: 44px;
+  width: 44px;
+}
+
+/* Móvil: el grupo arranca cerrado. Tres botones apilados son ~160px pegados
+   al borde derecho, justo encima del formulario de contacto. */
+@media (max-width: 767px) {
+  .fab-acciones {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+    transition: opacity 240ms ease,
+                transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fab-acciones[data-abierto="true"] {
+    pointer-events: auto;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Cerrado no ocupa espacio en la columna. */
+  .fab-acciones[data-abierto="false"] {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 10px;
+  }
+
+  .fab-acciones > .fab {
+    transition-delay: calc(var(--fab-i, 0) * 45ms);
+  }
+}
+
+/* Desktop: las tres siempre visibles, sin disparador. */
+@media (min-width: 768px) {
+  .fab-toggle {
+    display: none;
+  }
+}
+
+/* ===================== TILT DE TARJETAS ===================== */
+
+/*
+  El transform lo escribe el rAF de components/TiltCard.tsx.
+  NO poner transition sobre transform acá: pelearía con el lerp del loop y
+  daría un movimiento con doble amortiguación.
+*/
+.tilt-card {
+  transform-origin: center;
+}
+
+/* ===================== FOOTER ===================== */
+
+/* Redes con el nombre visible junto al icono. Con el nombre a la vista, el
+   destino del enlace deja de depender del aria-label. */
+.footer-red {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 42px;
-  width: 42px;
-  flex-shrink: 0;
-  border-radius: 13px;
-  background: rgba(143, 178, 207, 0.12);
-  color: var(--color-brand-muted-soft);
-}
-
-.footer-card-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-brand-muted-soft); /* 4.79:1 sobre el fondo de tarjeta */
-}
-
-.footer-card-value {
-  display: block;
-  margin-top: 3px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff; /* 10.55:1 */
-  overflow-wrap: anywhere; /* el correo largo no rompe la tarjeta */
-}
-
-.footer-card-arrow {
-  margin-left: auto;
-  flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.35);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 240ms ease,
-              transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.footer-card:hover .footer-card-arrow,
-.footer-card:focus-visible .footer-card-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Las tres redes tenían cada una su color de marca con gradiente y scale.
-   Sobre el navy competían entre sí; ahora comparten el lenguaje del sistema. */
-.footer-social {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  width: 40px;
+  gap: 9px;
   border-radius: 12px;
   border: 1px solid rgba(143, 178, 207, 0.20);
   background: rgba(255, 255, 255, 0.05);
-  color: var(--color-brand-muted-soft);
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
   transition: border-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1),
-              color 240ms ease;
+              background-color 240ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.footer-social:hover {
+.footer-red svg {
+  color: var(--color-brand-muted-soft);
+  transition: color 240ms ease;
+}
+
+.footer-red:hover {
   border-color: rgba(143, 178, 207, 0.50);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 22px 2px rgb(255 255 255 / 0.07);
+}
+
+.footer-red:hover svg {
+  color: #ffffff;
+}
+
+.footer-red:focus-visible {
+  outline: 2px solid var(--color-brand-muted-soft);
+  outline-offset: 3px;
 }
 
 /* ===================== FORMULARIO DE CONTACTO ===================== */
@@ -1970,10 +2034,16 @@ body {
     transform: none !important;
   }
 
-  /* La flecha de las tarjetas del footer NO entra en la lista de arriba: su
-     opacity 0 en reposo es el estado correcto, no un reveal roto. Lo que se
-     elimina es el desplazamiento, no la aparición en hover. */
-  .footer-card-arrow {
+  /* Segunda barrera del tilt. TiltCard ya no monta el efecto, pero si la
+     preferencia cambia con la página abierta, esto neutraliza cualquier
+     transform que hubiera quedado escrito. */
+  .tilt-card {
+    transform: none !important;
+  }
+
+  /* El grupo flotante aparece sin desplazamiento ni escala. Su opacity 0 en
+     móvil cerrado es estado correcto, no un reveal roto: NO se fuerza a 1. */
+  .fab-acciones {
     transform: none !important;
   }
 }
