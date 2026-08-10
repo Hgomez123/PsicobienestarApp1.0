@@ -173,6 +173,29 @@ del scope del fix aplicado pero conviene no perderlos.
 - **Considerar enriquecer `verifyDoctor` y `verifyPatient`.** Hoy retornan `string` (id). Si en el futuro se refactoran para devolver objetos `Doctor`/`Patient` ricos (con `name`, `email`, etc.), ajustar `HandlerContext.user` en `apiRoute` y aprovechar el tipado discriminado por rol que el blueprint original anticipaba.
 - **Path params en `apiRoute` cuando aparezca primer endpoint dinámico.** Hoy `apiRoute` solo acepta `body` y `query`. Cuando aparezca el primer route con segmento dinámico (`app/api/.../[id]`), extender la firma con `params?: ZodSchema<TParams>` y agregar manejo del segundo argumento `ctx: { params: Promise<...> }` del handler de App Router de Next 15+. Patrón documentado en `lib/security/apiHelper.DESIGN.md` bloque 5.
 
+### Infra de e2e — incompleta (detectado 09/08/2026)
+
+El directorio `e2e/` no es ejecutable hoy: `global-setup.ts` y
+`fixtures/ai-fixture.ts` importan `@playwright/test`, que **no está en
+`package.json` ni en `node_modules`**. Nadie puede correr esos archivos.
+
+Pendiente, en su propia sesión de "completar infra de e2e":
+
+- Agregar Playwright a `devDependencies` con versión pineada exacta (sin `^`,
+  según la regla del repo) y correr `npx playwright install chromium`.
+- Verificar que `global-setup.ts` y `ai-fixture.ts` funcionen — dependen de
+  `NEXT_PUBLIC_SUPABASE_URL`, `TEST_PATIENT_EMAIL`, etc., que hoy no están
+  documentadas en ningún lado.
+- **Versionar el script de verificación de visibilidad de la landing.** Durante
+  el trabajo de contacto→footer (09/08/2026) se escribió un script que verifica
+  que ningún contenido quede invisible en los 4 combos de viewport ×
+  `prefers-reduced-motion`. Cubre tres cosas que un chequeo ingenuo no ve:
+  la carga inicial sin scroll, el ocultamiento por `transform` (no solo
+  `opacity`), y la exclusión de lo decorativo (`aria-hidden`, `.sr-only`).
+  Existe como `e2e/landing-visibilidad.mjs` **sin trackear**, porque
+  versionarlo exige la dependencia de arriba. Vale la pena: el mecanismo de
+  `.scroll-reveal` ya se rompió una vez y dejó media landing en blanco.
+
 ### Deuda externa
 
 - **Vulnerabilidades pre-existentes de postcss (transitive de Next.js):** `GHSA-qx2v-qp2m-jg93` (XSS via unescaped `</style>`). Detectado durante install de zod en Fase 5 (03/05/2026). `npm audit fix --force` propone degradar Next a 9.3.3 (breaking change que rompe el repo entero). Esperar parche de Next o evaluar bump cuando salga. No se toca.
