@@ -11,8 +11,32 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
+/** Dominio propio. Todo lo demás redirige acá. */
+const CANONICAL_HOST = "psicobienestarguatemala.com";
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  /* ── Canonicalización de dominio ──────────────────────────
+     Vercel sirve el sitio también en *.vercel.app y responde ahí con un 302
+     temporal. Google lee el 302 como "la URL buena sigue siendo la vieja",
+     así que mantenía psicobienestar-app1-0-ixke.vercel.app en el índice con
+     el título anterior. Un 308 permanente consolida las señales en el
+     dominio propio.
+
+     Solo en producción: los deploys de preview tienen que seguir sirviendo
+     en su propia URL para poder revisarlos antes de mergear. */
+  if (process.env.VERCEL_ENV === "production") {
+    const host = req.headers.get("host") ?? "";
+    if (host !== CANONICAL_HOST && host.endsWith(".vercel.app")) {
+      const url = req.nextUrl.clone();
+      url.protocol = "https:";
+      url.host = CANONICAL_HOST;
+      url.port = "";
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   const res = NextResponse.next();
 
   /* ── Security Headers ──────────────────────────────────── */
