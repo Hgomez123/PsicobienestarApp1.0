@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import CursorGlow from "@/components/CursorGlow";
 import FloatingActions from "@/components/FloatingActions";
 import TiltCard from "@/components/TiltCard";
+import StructuredData from "@/components/StructuredData";
 import { useModalA11y } from "@/lib/hooks/useModalA11y";
 
 /* ─── Datos ───────────────────────────────────────────────── */
@@ -212,6 +213,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-800">
+      {/* Datos estructurados: solo en la landing, que es la única ruta indexable. */}
+      <StructuredData />
+
 
       <a
         href="#inicio"
